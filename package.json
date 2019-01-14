@@ -1,0 +1,16 @@
+{
+  "name": "hf-trader",
+  "version": "0.0.1",
+  "main": "src/main.py",
+  "scripts": {
+    "start": "mypy --config-file mypy.ini src/main.py && python3 src/main.py",
+    "test": "mypy --config-file mypy.ini src/main.py && pytest -v"
+  },
+  "repository": {},
+  "contributors": [
+    "Jeff Bolin <bolinjeff@gmail.com>"
+  ],
+  "license": "UNLICENSED",
+  "dependencies": {
+  }
+}
