@@ -36,9 +36,15 @@ class QLearningModel(PRecord):
 
 
 def construct(session: TensorFlowSession) -> QLearningModel:
+    neural_network = FullyConnectedNeuralNetwork(
+        session,
+        input_size=3,
+        output_size=3,
+        batch_size=10
+    )
     return QLearningModel(
         memory=q_memory.construct(1000),
-        neural_network=FullyConnectedNeuralNetwork(session),
+        neural_network=neural_network,
         session=session
     )
 

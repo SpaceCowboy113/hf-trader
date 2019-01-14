@@ -4,10 +4,10 @@ import tensorflow as tf
 
 # TODO: refactor to use estimator API
 class FullyConnectedNeuralNetwork:
-    def __init__(self, session):
-        self.input_size = 3
-        self.output_size = 3
-        self.batch_size = 10
+    def __init__(self, session, input_size, output_size, batch_size):
+        self.input_size = input_size
+        self.output_size = output_size
+        self.batch_size = batch_size
 
         self.input = None
         self.output = None
