@@ -4,6 +4,7 @@ venv/
 .mypy_cache/
 .pytest_cache/
 .vscode/
+transaction_history.csv
 __pycache__
 *.log
 .DS_Store

@@ -1,5 +1,6 @@
 import random
-import time
+from datetime import datetime
+from typing import Tuple
 
 import cbpro
 import tensorflow as tf
@@ -11,10 +12,9 @@ import q_learning_model
 import result
 import trading_record
 from logger import logger
+from maybe import Maybe
 from q_records import QModelInput
 from trading_record import TradingAction
-from maybe import Maybe
-from typing import Tuple
 
 
 class CoinbaseMessage(PRecord):
@@ -36,22 +36,27 @@ def predict_random() -> TradingAction:
     return TradingAction(order='hold', amount=0)
 
 
-def parse_message(msg: CoinbaseMessage) -> Maybe[Tuple[float, float]]:
+# Returns epoch (as a float in seconds) from zulu formatted date string
+# (zulu date strings are given by coinbase)
+def get_epoch(zulu_date: str) -> float:
+    return datetime.strptime(zulu_date, '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
+
+
+PriceInfo = Tuple[float, float]
+
+
+def parse_message(msg: CoinbaseMessage) -> Maybe[PriceInfo]:
+    has_price_changed = (
+        'price' in msg and
+        'time' in msg and
+        msg['type'] == 'match'
+    )
+    if has_price_changed:
+        exchange_rate = float(msg['price'])
+        epoch = get_epoch(msg['time'])
+
+        return exchange_rate, epoch
     return None
-# def update_exchange_rate(msg: CoinbaseMessage, record: TradingRecord) -> Maybe[TradingRecord]:
-#     if 'price' in msg and 'time' in msg and 'type' in msg and msg['type'] == 'done':
-#         exchange_rate = float(msg['price'])
-#         epoch = get_epoch(msg['time'])
-#         sliding_window_sample = sliding_window.SlidingWindowSample(
-#             exchange_rate=exchange_rate,
-#             epoch=epoch
-#         )
-#         return (
-#             pipe
-#             | (sliding_window.add, sliding_window_sample)
-#             | (record.set, 'exchange_rates')
-#         )(record.exchange_rates)
-#     return None
 
 
 class CoinbaseWebsocketClient(cbpro.WebsocketClient):
@@ -104,74 +109,69 @@ class CoinbaseWebsocketClient(cbpro.WebsocketClient):
             100000.0
         )
 
-    def q_learning_trade(self, message: CoinbaseMessage) -> None:
-        record = trading_record.update_exchange_rate(message, self.q_trading_record)
-        if record is not None:
-            # TODO: Modify these functions to no longer use default values
-            exchange_rate = maybe.with_default(0.0, trading_record.get_exchange_rate(record))
-            rate_of_change = maybe.with_default(0.0, trading_record.get_rate_of_change(record))
-            moving_average = maybe.with_default(0.0, trading_record.get_moving_average(record))
+    def q_learning_trade(self, price_info: PriceInfo) -> None:
+        record = trading_record.update_exchange_rate(price_info, self.q_trading_record)
+        # TODO: Modify these functions to no longer use default values
+        exchange_rate = maybe.with_default(0.0, trading_record.get_exchange_rate(record))
+        rate_of_change = maybe.with_default(0.0, trading_record.get_rate_of_change(record))
+        moving_average = maybe.with_default(0.0, trading_record.get_moving_average(record))
 
-            q_model_input = QModelInput(
-                exchange_rate=exchange_rate,
-                rate_of_change=rate_of_change,
-                moving_average=moving_average
-            )
+        q_model_input = QModelInput(
+            exchange_rate=exchange_rate,
+            rate_of_change=rate_of_change,
+            moving_average=moving_average
+        )
 
-            action = q_learning_model.predict_greedy_epsilon(
-                q_model_input,
-                self.q_model,
-                self.time_delta
-            )
+        action = q_learning_model.predict_greedy_epsilon(
+            q_model_input,
+            self.q_model,
+            self.time_delta
+        )
 
-            finished_order = trading_record.place_order(action, record)
-            self.q_trading_record = result.with_default(self.q_trading_record, finished_order)
+        finished_order = trading_record.place_order(action, record)
+        self.q_trading_record = result.with_default(self.q_trading_record, finished_order)
 
-            reward = q_learning_model.calculate_reward(record, self.q_trading_record)
+        reward = q_learning_model.calculate_reward(record, self.q_trading_record)
 
-            self.q_model = q_learning_model.add_training_sample(
-                neural_network_input=q_model_input,
-                neural_network_prediction=action,
-                reward=reward,
-                model=self.q_model
-            )
+        self.q_model = q_learning_model.add_training_sample(
+            neural_network_input=q_model_input,
+            neural_network_prediction=action,
+            reward=reward,
+            model=self.q_model
+        )
 
-            # Train model every 15 time delta cycles
-            if ((self.time_delta + 1) % 15 == 0):
-                q_learning_model.train(self.q_model)
+        # Train model every 15 time delta cycles
+        if ((self.time_delta + 1) % 15 == 0):
+            q_learning_model.train(self.q_model)
 
-            trading_record.statistics(self.q_trading_record)
-            self.time_delta += 1
+        trading_record.statistics(self.q_trading_record)
+        self.time_delta += 1
 
-    def algorithmic_trade(self, message: CoinbaseMessage) -> None:
-        record = trading_record.update_exchange_rate(message, self.a_trading_record)
-        if record is not None:
-            action, self.a_model = algorithmic_model.predict(
-                record,
-                self.a_model
-            )
+    def algorithmic_trade(self, price_info: PriceInfo) -> None:
+        record = trading_record.update_exchange_rate(price_info, self.a_trading_record)
+        action, self.a_model = algorithmic_model.predict(
+            record,
+            self.a_model
+        )
 
-            finished_order = trading_record.place_order(action, record)
-            self.a_trading_record = result.with_default(self.a_trading_record, finished_order)
+        finished_order = trading_record.place_order(action, record)
+        self.a_trading_record = result.with_default(self.a_trading_record, finished_order)
 
-            trading_record.statistics(self.a_trading_record)
-            algorithmic_model.statistics(self.a_model)
+        trading_record.statistics(self.a_trading_record)
+        algorithmic_model.statistics(self.a_model)
 
-    def random_trade(self, message: CoinbaseMessage) -> None:
-        record = trading_record.update_exchange_rate(message, self.r_trading_record)
-        if record is not None:
-            action = predict_random()
+    def random_trade(self, price_info: PriceInfo) -> None:
+        record = trading_record.update_exchange_rate(price_info, self.r_trading_record)
+        action = predict_random()
 
-            finished_order = trading_record.place_order(action, record)
-            self.r_trading_record = result.with_default(self.r_trading_record, finished_order)
+        finished_order = trading_record.place_order(action, record)
+        self.r_trading_record = result.with_default(self.r_trading_record, finished_order)
 
-            trading_record.statistics(self.r_trading_record)
+        trading_record.statistics(self.r_trading_record)
 
     def on_message(self, message: CoinbaseMessage):
         self.message_count += 1
-        self.q_learning_trade(message)
-        self.algorithmic_trade(message)
-        self.random_trade(message)
+        maybe.map_all([self.algorithmic_trade, self.random_trade], parse_message(message))
 
     def on_close(self):
         logger.log("-- Goodbye! --")
@@ -182,8 +182,9 @@ ws_client.start()
 
 logger.log(f'{ws_client.url} {ws_client.products}')
 
-while (ws_client.message_count < 100000):
-    # logger.log ("\nmessage_count =", "{} \n".format(ws_client.message_count))
-    time.sleep(1)
+# while (ws_client.message_count < 100000):
+# while (True):
+# logger.log ("\nmessage_count =", "{} \n".format(ws_client.message_count))
+# time.sleep(1)
 
-ws_client.close()
+# ws_client.close()

@@ -2,7 +2,7 @@
 import tensorflow as tf
 
 
-# TODO: refactor to use estimator API
+# TODO: refactor to use tensorflow estimator API instead
 class FullyConnectedNeuralNetwork:
     def __init__(self, session, input_size, output_size, batch_size):
         self.input_size = input_size
