@@ -4,6 +4,7 @@ venv/
 .mypy_cache/
 .pytest_cache/
 .vscode/
+config/authentication.json
 transaction_history.csv
 __pycache__
 *.log

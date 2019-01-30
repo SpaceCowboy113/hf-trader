@@ -1,6 +1,6 @@
 from typing import TypeVar, Union
 from maybe import Maybe
-import logger
+from logger import logger
 import inspect
 
 
