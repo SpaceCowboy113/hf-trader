@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Tuple
+from typing import Tuple, Dict
 
 from pyrsistent import PRecord, field, pvector_field
 

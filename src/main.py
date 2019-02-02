@@ -9,6 +9,7 @@ from coinbase_websocket_client import (  # noqa: F401
     TradingRecordRegistry
 )
 import web_application
+# import asyncio
 
 trading_record_registry = {}  # type: TradingRecordRegistry
 
@@ -65,4 +66,23 @@ logger.log(f'{coinbase_websocket_client.url} {coinbase_websocket_client.products
 
 web_application.start(trading_record_registry, trading_model_registry)
 
+
+# async def main():
+#     coinbase_websocket_client = CoinbaseWebsocketClient(
+#         trading_record_registry, trading_model_registry)
+
+#     logger.log(f'{coinbase_websocket_client.url} {coinbase_websocket_client.products}')
+
+#     tasks = [
+#         coinbase_websocket_client.start(),
+#         web_application.start(trading_record_registry, trading_model_registry)
+#     ]
+
+#     await asyncio.gather(*tasks)
+
+# event_loop = asyncio.get_event_loop()
+# try:
+#     event_loop.run_until_complete(main())
+# finally:
+#     event_loop.close()
 # ws_client.close()

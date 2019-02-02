@@ -116,6 +116,7 @@ class CoinbaseWebsocketClient(cbpro.WebsocketClient):
 
         # Train model every 15 time delta cycles
         if ((self.time_delta + 1) % 15 == 0):
+            logger.log('training...')
             q_learning_model.train(self.trading_model_registry['q-learning'])
 
         trading_record.statistics(self.trading_record_registry['q-learning'])
@@ -157,7 +158,10 @@ class CoinbaseWebsocketClient(cbpro.WebsocketClient):
 
     def on_message(self, message: CoinbaseMessage):
         self.message_count += 1
-        maybe.map_all([self.algorithmic_trade, self.random_trade], parse_message(message))
+        maybe.map_all(
+            [self.algorithmic_trade, self.random_trade, self.q_learning_trade],
+            parse_message(message)
+        )
 
     def on_close(self):
         logger.log("-- Goodbye! --")
