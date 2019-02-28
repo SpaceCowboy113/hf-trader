@@ -1,3 +1,4 @@
+
 from pyrsistent import PRecord, field
 
 # TODO: rename to NeuralNetworkInput and NeuralNetworkOutput

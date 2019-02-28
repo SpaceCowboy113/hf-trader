@@ -11,5 +11,5 @@ TradingModelRegistry = TypedDict('TradingModelRegistry', {
     'algorithmic': AlgorithmicModel
 })
 
-# TODO: converting to typed dictionary
+# TODO: convert to typed dictionary
 TradingRecordRegistry = Dict[str, TradingRecord]

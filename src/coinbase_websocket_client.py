@@ -105,7 +105,8 @@ class CoinbaseWebsocketClient(cbpro.WebsocketClient):
         )
 
         reward = q_learning_model.calculate_reward(
-            record, self.trading_record_registry['q-learning'])
+            record, self.trading_record_registry['q-learning']
+        )
 
         self.trading_model_registry['q-learning'] = q_learning_model.add_training_sample(
             neural_network_input=q_model_input,
