@@ -63,3 +63,9 @@ def current_exchange_rate(window: SlidingWindow) -> Union[float, None]:
     if len(window.samples) == 0:
         return None
     return window.samples[-1].exchange_rate
+
+
+def current_epoch(window: SlidingWindow) -> Union[float, None]:
+    if len(window.samples) == 0:
+        return None
+    return window.samples[-1].epoch

@@ -4,16 +4,25 @@ from typing import List, Tuple  # noqa: F401
 from pyrsistent import PRecord, PVector, field, pvector
 
 
+# TODO: consolidate this function (duplicated in trading_record)
+def valid_order_types(string: str) -> Tuple[bool, str]:
+    order_types = {
+        'buy': True,
+        'sell': True,
+        'hold': True
+    }
+    return string in order_types, 'order must be buy, sell, or hold'
+
+
+# TODO: figure out a way to consolidate transaction state
+# between Transaction, TradingAction, and TradingRecord records
 class Transaction(PRecord):
     label = field(type=str, mandatory=True)
     quantity = field(type=float, mandatory=False)
     exchange_rate = field(type=float, mandatory=False)
     timestamp = field(type=str, mandatory=False)
     fees = field(type=float, mandatory=False)
-
-# TODO: rename to paired transactions to avoid confusion with the term "Match"
-
-# TODO: Validate that labels are same with invariant
+    order = field(type=str, invariant=valid_order_types, mandatory=True)
 
 
 def must_have_same_label(transactions) -> Tuple[bool, str]:
@@ -24,6 +33,14 @@ class PairedTransactions(PRecord):
     __invariant__ = must_have_same_label
     buy = field(type=Transaction, mandatory=True)
     sell = field(type=Transaction, mandatory=True)
+
+
+# TODO: move into a transaction_window.py file
+def window_add(transaction: Transaction, transaction_window: PVector) -> PVector:
+    MAXIMUM_SIZE = 1000
+    if len(transaction_window) >= MAXIMUM_SIZE:
+        return transaction_window.append(transaction)[1:]
+    return transaction_window.append(transaction)
 
 
 # TODO: Renamed to record_transaction_pair
@@ -93,7 +110,12 @@ def pair_transaction(
     sell_transaction: Transaction,
     pending_transactions: PVector
 ) -> PVector:
-    """ Match pending transactions using a FIFO algorithm
+    """ Match pending paired transactions using a FIFO algorithm
+
+    Cryptocurrency purchases are turned into pending paired transactions.
+    When cryptocurrency is sold, the oldest purchases are paired with the
+    newest sales to calculate capital gains.  Transaction pairs are recorded
+    in transaction_history.csv
     """
     remaining_quantity_sold = sell_transaction.quantity
     remaining_pending_transactions = []  # type: List[Transaction]

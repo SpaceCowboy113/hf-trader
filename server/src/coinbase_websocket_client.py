@@ -38,7 +38,7 @@ def predict_random() -> TradingAction:
 # Returns epoch (as a float in seconds) from zulu formatted date string
 # (zulu date strings are given by coinbase)
 
-
+# TODO: consolidate this function (duplicated in trading_record)
 def get_epoch(zulu_date: str) -> float:
     return datetime.strptime(zulu_date, '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
 

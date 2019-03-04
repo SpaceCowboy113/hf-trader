@@ -71,10 +71,10 @@ def predict_greedy_epsilon(
     epsilon = MIN_EPSILON + (MAX_EPSILON - MIN_EPSILON) * math.exp(-LAMBDA * time_delta)
     print(epsilon)
     if random.random() < epsilon:
-        randomPrediction = random.randint(0, 2)
-        if randomPrediction is 0:
+        random_prediction = random.randint(0, 2)
+        if random_prediction == 0:
             return TradingAction(order='buy', amount=1)
-        elif randomPrediction is 1:
+        elif random_prediction == 1:
             return TradingAction(order='sell', amount=1)
         else:
             return TradingAction(order='sell', amount=1)
