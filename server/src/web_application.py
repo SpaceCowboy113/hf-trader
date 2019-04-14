@@ -1,10 +1,8 @@
 from flask import Flask
 from flask_restful import Api, Resource
-# from flask.ext.cors import cross_origin
 from registries import TradingRecordRegistry, TradingModelRegistry
 from logger import logger
 from flask_cors import CORS, cross_origin
-import trading_record
 import json
 
 
@@ -27,18 +25,12 @@ class Statistics(Resource):
         TODO: parameterize 'algorithmic' and 'q-learning' Queries
         '''
         logger.log('/stats/GET')
-        # algorithmic_record = self.trading_record_registry['algorithmic'].serialize()
-        # exchange_rate = trading_record.get_exchange_rate(
-        #     self.trading_record_registry['algorithmic']
-        # )
-        # logger.debug(f'web_application exchange_rate: {exchange_rate}')
         algorithmic_record = self.trading_record_registry['algorithmic']
         q_learning_record = self.trading_record_registry['q-learning']
         return json.dumps({
             'algorithmic': algorithmic_record.serialize(),
             'q-learning': q_learning_record.serialize(),
         })
-        # return json.dumps(algorithmic_record)
 
 
 class Transactions(Resource):

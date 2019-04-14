@@ -1,0 +1,20 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+mypy = "*"
+pyrsistent = "*"
+pipetools = "*"
+flake8 = "*"
+tensorflow = "==1.13.1"
+cbpro = "*"
+flask = "*"
+flask-restful = "*"
+flask-cors = "*"
+
+[requires]
+python_version = "3.7"

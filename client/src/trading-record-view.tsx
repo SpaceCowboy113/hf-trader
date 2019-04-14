@@ -4,6 +4,8 @@ import {
     calculateNetWorth,
     calculateProfit
 } from './trading-state';
+import { pipe } from './functional';
+import { maybe } from './maybe';
 
 interface TradingRecordProps {
     tradingRecordRegistry: TradingRecordRegistry;
@@ -29,14 +31,23 @@ function displayTradingRecordProperty(
     propertyKey: string,
 ): string {
     const tradingRecord = props.tradingRecordRegistry.get(props.tradingStrategy);
-    if (tradingRecord) {
-        const property = tradingRecord[propertyKey];
-        if (property !== undefined) {
-            const fixedFloatingPoint = Number.parseFloat(property).toFixed(2)
-            return String(fixedFloatingPoint);
-        }
-    }
-    return 'unknown';
+    // TODO: remove this in favor of ramda
+    const property = pipe(
+        tradingRecord => tradingRecord[propertyKey],
+        property => Number.parseFloat(property).toFixed(2),
+        property => String(property),
+    )(tradingRecord);
+    return maybe.withDefault('unknown', property);
+
+    // The above is equivalent to...
+    // if (tradingRecord) {
+    //     const property = tradingRecord[propertyKey];
+    //     if (property !== undefined) {
+    //         const fixedFloatingPoint = Number.parseFloat(property).toFixed(2)
+    //         return String(fixedFloatingPoint);
+    //     }
+    // }
+    // return 'unknown';
 }
 
 function displayLength(maybeArray: any[] | string): string {

@@ -117,7 +117,7 @@ class CoinbaseWebsocketClient(cbpro.WebsocketClient):
 
         # Train model every 15 time delta cycles
         if ((self.time_delta + 1) % 15 == 0):
-            logger.log('training...')
+            logger.log('training q-learning model...')
             q_learning_model.train(self.trading_model_registry['q-learning'])
 
         trading_record.statistics(self.trading_record_registry['q-learning'])
