@@ -1,6 +1,6 @@
 import { Signal } from 'micro-signals';
 import { string } from 'prop-types';
-import { Maybe } from './maybe';
+import { Maybe } from '../functional/maybe';
 
 interface OnChangePayload<T> {
     key: string;

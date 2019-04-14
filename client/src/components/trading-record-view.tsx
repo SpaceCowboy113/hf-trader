@@ -3,9 +3,8 @@ import {
     TradingRecordRegistry,
     calculateNetWorth,
     calculateProfit
-} from './trading-state';
-import { pipe } from './functional';
-import { maybe } from './maybe';
+} from '../state/trading-state';
+import { maybe } from '../functional/maybe';
 
 interface TradingRecordProps {
     tradingRecordRegistry: TradingRecordRegistry;
@@ -31,8 +30,7 @@ function displayTradingRecordProperty(
     propertyKey: string,
 ): string {
     const tradingRecord = props.tradingRecordRegistry.get(props.tradingStrategy);
-    // TODO: remove this in favor of ramda
-    const property = pipe(
+    const property = maybe.pipe<string>(
         tradingRecord => tradingRecord[propertyKey],
         property => Number.parseFloat(property).toFixed(2),
         property => String(property),

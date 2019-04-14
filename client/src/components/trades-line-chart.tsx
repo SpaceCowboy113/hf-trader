@@ -6,9 +6,8 @@ import {
     TradingRecord,
     Transaction,
     Order,
-} from './trading-state';
-import { Maybe } from './maybe';
-import './app.css';
+} from '../state/trading-state';
+import { Maybe } from '../functional/maybe';
 
 
 function getPointBorderColor(order: Order): Maybe<string> {
@@ -17,8 +16,6 @@ function getPointBorderColor(order: Order): Maybe<string> {
             return 'rgb(151, 53, 53)';
         case 'sell':
             return 'rgb(46, 132, 46)';
-        default:
-            return;
     }
 }
 
@@ -28,8 +25,6 @@ function getPointBackgroundColor(order: Order): Maybe<string> {
             return 'rgba(192,75,75,1)';
         case 'sell':
             return 'rgba(75,192,75,1)';
-        default:
-            return;
     }
 }
 

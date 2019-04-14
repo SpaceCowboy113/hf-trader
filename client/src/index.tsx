@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './app';
+import App from './components/app';
 import * as serviceWorker from './service-worker';
-import ObservableMap from './observable-map';
-import { TradingModel, TradingRecord } from './trading-state';
+import ObservableMap from './state/observable-map';
+import { TradingModel, TradingRecord } from './state/trading-state';
+import './style/index.css';
 
 const tradingRecordRegistry = new ObservableMap<TradingRecord>();
 const tradingModelRegistry = new ObservableMap<TradingModel>();
