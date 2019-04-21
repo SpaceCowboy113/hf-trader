@@ -21,7 +21,7 @@ DEBUG_FLAG = False
 class logger:
     @staticmethod
     def log(message):
-        print(f'          {message}')
+        print(f'Log       {message}')
         # print(f'/\/\/\/\/\| {message}')
 
     @staticmethod

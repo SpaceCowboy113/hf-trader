@@ -15,4 +15,3 @@ class QModelOutput(PRecord):
     buy = field(type=float)
     sell = field(type=float)
     hold = field(type=float)
-

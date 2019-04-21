@@ -4,11 +4,10 @@ A model that predicts trading decisions using handbuilt algorithms
 from functools import partial
 from typing import Tuple
 
-from pyrsistent import PRecord, field, pvector, pvector_field
-
-from logger import logger
 import maybe
 import trading_record
+from logger import logger
+from pyrsistent import PRecord, field, pvector, pvector_field
 from trading_record import TradingAction, TradingRecord
 
 

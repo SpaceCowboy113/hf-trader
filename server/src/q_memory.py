@@ -1,7 +1,8 @@
 import random
-from pyrsistent import PRecord, field, pvector_field, PVector
-from trading_record import TradingAction
+
+from pyrsistent import PRecord, PVector, field, pvector_field
 from q_records import QModelInput
+from trading_record import TradingAction
 
 
 class QMemorySample(PRecord):

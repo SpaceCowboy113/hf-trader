@@ -43,10 +43,7 @@ def window_add(transaction: Transaction, transaction_window: PVector) -> PVector
     return transaction_window.append(transaction)
 
 
-# TODO: Renamed to record_transaction_pair
-
-
-def record_paired_transaction(
+def record_paired_transaction(  # TODO: Renamed to record_transaction_pair
     path: str,
     paired_transactions: PairedTransactions
 ) -> None:
@@ -101,7 +98,15 @@ def calculate_capital_gains(transactions: PairedTransactions) -> float:
 
 
 def calculate_taker_fee(quantity: float, exchange_rate: float) -> float:
-    FEE_RATE = 0.003  # 0.30%
+    ''' Calculates the fee when making a coinbase pro taker order
+
+    An take your order is in order that is executed immediately and as such,
+    has a higher fee structure.
+
+    TODO: update this function to pull the fee rate down dynamically from
+    coinbase.pro.  Fee is reduced as transaction volume goes up.
+    '''
+    FEE_RATE = 0.0025  # 0.25%
     price = quantity * exchange_rate
     return FEE_RATE * price
 
@@ -110,13 +115,13 @@ def pair_transaction(
     sell_transaction: Transaction,
     pending_transactions: PVector
 ) -> PVector:
-    """ Match pending paired transactions using a FIFO algorithm
+    ''' Match pending paired transactions using a FIFO algorithm
 
     Cryptocurrency purchases are turned into pending paired transactions.
     When cryptocurrency is sold, the oldest purchases are paired with the
     newest sales to calculate capital gains.  Transaction pairs are recorded
-    in transaction_history.csv
-    """
+    in transaction_history.csv.
+    '''
     remaining_quantity_sold = sell_transaction.quantity
     remaining_pending_transactions = []  # type: List[Transaction]
     for buy_transaction in pending_transactions:

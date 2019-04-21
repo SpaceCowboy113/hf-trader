@@ -1,9 +1,10 @@
-from pyrsistent import PRecord, field, pvector_field,  PVector
-from invariants import must_be_positive
-from typing import Union
-from functools import reduce
 import operator
-from pipetools import pipe, X
+from functools import reduce
+from typing import Union
+
+from invariants import must_be_positive
+from pipetools import X, pipe
+from pyrsistent import PRecord, PVector, field, pvector_field
 
 
 class SlidingWindowSample(PRecord):

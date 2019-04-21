@@ -1,7 +1,8 @@
-from typing import TypeVar, Union
-from maybe import Maybe
-from logger import logger
 import inspect
+from typing import TypeVar, Union
+
+from logger import logger
+from maybe import Maybe
 
 
 def get_frame_info(stack):

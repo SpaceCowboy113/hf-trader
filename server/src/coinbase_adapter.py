@@ -1,10 +1,9 @@
 import json
 
 import cbpro
-from pyrsistent import PRecord, field
-
-from logger import logger
 import result
+from logger import logger
+from pyrsistent import PRecord, field
 
 
 class CoinbaseKeys(PRecord):

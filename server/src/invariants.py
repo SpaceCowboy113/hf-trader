@@ -1,4 +1,4 @@
-from typing import Union, Tuple
+from typing import Tuple, Union
 
 
 def cannot_be_negative(number: Union[int, float]) -> Tuple[bool, str]:

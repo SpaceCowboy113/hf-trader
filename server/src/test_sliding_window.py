@@ -1,18 +1,7 @@
 import pytest  # noqa: F401
 from pyrsistent import pvector
-
-from sliding_window import (
-    SlidingWindowSample,
-    construct,
-    add,
-    average,
-    derivative,
-    time_slice,
-    current_exchange_rate
-)
-# import sliding_window
-# from pipetools import pipe
-# from functools import partial
+from sliding_window import (SlidingWindowSample, add, average, construct,
+                            current_exchange_rate, derivative, time_slice)
 
 
 def add_sample(exchange_rate, window):

@@ -1,20 +1,18 @@
 import random
-from datetime import datetime
-from typing import Tuple, Union
-
-import cbpro
-from pyrsistent import PRecord, field
+from typing import Tuple
 
 import algorithmic_model
+import cbpro
 import maybe
 import q_learning_model
 import result
 import trading_record
 from logger import logger
 from maybe import Maybe
+from pyrsistent import PRecord, field
 from q_records import QModelInput
-from trading_record import TradingAction, TradingRecord
-from registries import TradingRecordRegistry, TradingModelRegistry
+from registries import TradingModelRegistry, TradingRecordRegistry
+from trading_record import TradingAction
 
 
 class CoinbaseMessage(PRecord):
@@ -24,9 +22,9 @@ class CoinbaseMessage(PRecord):
 
 
 def predict_random() -> TradingAction:
-    """ Returns a random trading action.
+    ''' Returns a random trading action.
     buy 25%, sell 25%, and hold 50% of the time
-    """
+    '''
     prediction = random.randint(0, 3)
     amount = random.uniform(0.0, 1.0)
     if prediction == 0:
@@ -34,13 +32,6 @@ def predict_random() -> TradingAction:
     elif prediction == 1:
         return TradingAction(order='sell', amount=amount)
     return TradingAction(order='hold', amount=0)
-
-# Returns epoch (as a float in seconds) from zulu formatted date string
-# (zulu date strings are given by coinbase)
-
-# TODO: consolidate this function (duplicated in trading_record)
-def get_epoch(zulu_date: str) -> float:
-    return datetime.strptime(zulu_date, '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
 
 
 PriceInfo = Tuple[float, float]
@@ -54,7 +45,7 @@ def parse_message(msg: CoinbaseMessage) -> Maybe[PriceInfo]:
     )
     if has_price_changed:
         exchange_rate = float(msg['price'])
-        epoch = get_epoch(msg['time'])
+        epoch = trading_record.get_epoch(msg['time'])
 
         return exchange_rate, epoch
     return None
@@ -74,7 +65,9 @@ class CoinbaseWebsocketClient(cbpro.WebsocketClient):
         self.url = "wss://ws-feed.pro.coinbase.com/"
         self.products = ["BTC-USD"]
         self.message_count = 0
-        self.time_delta = 0  # TODO: Turn into real time delta
+        # TODO: Turn into real time delta
+        # Currently time_delta increments on price changes
+        self.time_delta = 0
 
     def q_learning_trade(self, price_info: PriceInfo) -> None:
         record = trading_record.update_exchange_rate(

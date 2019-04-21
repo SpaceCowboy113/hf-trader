@@ -1,15 +1,12 @@
-import tensorflow as tf
 import algorithmic_model
 import q_learning_model
+import tensorflow as tf
 import trading_record
-from logger import logger
-from coinbase_websocket_client import (  # noqa: F401
-    CoinbaseWebsocketClient,
-    TradingModelRegistry,
-    TradingRecordRegistry
-)
 import web_application
-# import asyncio
+from coinbase_websocket_client import (CoinbaseWebsocketClient,  # noqa: F401
+                                       TradingModelRegistry,
+                                       TradingRecordRegistry)
+from logger import logger
 
 trading_record_registry = {}  # type: TradingRecordRegistry
 
@@ -65,24 +62,3 @@ coinbase_websocket_client.start()
 logger.log(f'{coinbase_websocket_client.url} {coinbase_websocket_client.products}')
 
 web_application.start(trading_record_registry, trading_model_registry)
-
-
-# async def main():
-#     coinbase_websocket_client = CoinbaseWebsocketClient(
-#         trading_record_registry, trading_model_registry)
-
-#     logger.log(f'{coinbase_websocket_client.url} {coinbase_websocket_client.products}')
-
-#     tasks = [
-#         coinbase_websocket_client.start(),
-#         web_application.start(trading_record_registry, trading_model_registry)
-#     ]
-
-#     await asyncio.gather(*tasks)
-
-# event_loop = asyncio.get_event_loop()
-# try:
-#     event_loop.run_until_complete(main())
-# finally:
-#     event_loop.close()
-# ws_client.close()

@@ -1,10 +1,10 @@
-from flask import Flask
-from flask_restful import Api, Resource
-from registries import TradingRecordRegistry, TradingModelRegistry
-from logger import logger
-from flask_cors import CORS, cross_origin
 import json
 
+from flask import Flask
+from flask_cors import CORS, cross_origin
+from flask_restful import Api, Resource
+from logger import logger
+from registries import TradingModelRegistry, TradingRecordRegistry
 
 # TODO: move into a configuration file
 CLIENT_URI = 'http://localhost:3000'
@@ -48,11 +48,11 @@ class Transactions(Resource):
         TODO: parameterize 'algorithmic' and 'q-learning' Queries
         '''
         logger.log('/transactions/GET')
-        algorithmic_transaction_window = self.trading_record_registry['algorithmic'].transaction_window
-        q_learning_transaction_window = self.trading_record_registry['q-learning'].transaction_window
+        algorithmic_record = self.trading_record_registry['algorithmic']
+        q_learning_record = self.trading_record_registry['q-learning']
         return json.dumps({
-            'algorithmic': algorithmic_transaction_window.serialize(),
-            'q-learning': q_learning_transaction_window.serialize(),
+            'algorithmic': algorithmic_record.transaction_window.serialize(),
+            'q-learning': q_learning_record.transaction_window.serialize(),
         })
 
 

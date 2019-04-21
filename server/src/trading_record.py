@@ -1,15 +1,14 @@
 from datetime import datetime
 from typing import Tuple
 
-from pyrsistent import PRecord, field, pvector_field
-
 import sliding_window
+import transaction
 from invariants import cannot_be_negative
 from logger import logger
 from maybe import Maybe
+from pyrsistent import PRecord, field, pvector_field
 from result import Error, Result, Warning
 from transaction import Transaction
-import transaction
 
 
 class TradingRecord(PRecord):
@@ -181,10 +180,12 @@ def hold_crypto(record: TradingRecord) -> Result[TradingRecord]:
     })
 
 
-# Returns epoch (as a float in seconds) from zulu formatted date string
-# (zulu date strings are given by coinbase)
-# TODO: move into a time management file
 def get_epoch(zulu_date: str) -> float:
+    ''' Returns epoch (as a float in seconds) from zulu formatted date string
+    (zulu date strings are given by coinbase)
+    TODO: move into a time management file along with trading_record.get_timestamp
+    '''
+
     return datetime.strptime(zulu_date, '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
 
 

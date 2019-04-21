@@ -1,6 +1,6 @@
 import pytest  # noqa: F401
-from q_records import QModelOutput
 from q_learning_model import choose_best_action
+from q_records import QModelOutput
 from trading_record import TradingAction
 
 

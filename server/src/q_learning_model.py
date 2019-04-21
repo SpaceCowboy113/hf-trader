@@ -7,19 +7,20 @@ Use formula to calculate Q(s, a) using reward, Q, Q', and GAMMA
 Train Network
 """
 
-import numpy as np
-from typing import List, Any
-from logger import logger
-import random
 import math
+import random
+from typing import Any, List
+
+import fully_connected_neural_network
+import numpy as np
+import q_memory
+import tensorflow as tf
+from fully_connected_neural_network import FullyConnectedNeuralNetwork
+from logger import logger
 from pyrsistent import PRecord, field
 from q_memory import QMemory, QMemorySample
-import q_memory
-from fully_connected_neural_network import FullyConnectedNeuralNetwork
-import fully_connected_neural_network
-from trading_record import TradingRecord, TradingAction
-import tensorflow as tf
 from q_records import QModelInput, QModelOutput
+from trading_record import TradingAction, TradingRecord
 
 # Type aliases
 # TODO: turn these into real types
@@ -69,7 +70,7 @@ def predict_greedy_epsilon(
     MAX_EPSILON = 0.75
     LAMBDA = 0.0001
     epsilon = MIN_EPSILON + (MAX_EPSILON - MIN_EPSILON) * math.exp(-LAMBDA * time_delta)
-    print(epsilon)
+    logger.log(f'q-learning epsilon: {epsilon}')
     if random.random() < epsilon:
         random_prediction = random.randint(0, 2)
         if random_prediction == 0:
@@ -124,7 +125,7 @@ def train(model: QLearningModel) -> None:
         reward = sample['reward']  # type: float
 
         predicted_actions = predict(state, model)
-        print(f'predicted_actions: {predicted_actions}')
+        logger.log(f'q-learning predicted_actions: {predicted_actions}')
 
         # If next state does not exist, do not calculate future reward
         if index + 1 >= len(samples):

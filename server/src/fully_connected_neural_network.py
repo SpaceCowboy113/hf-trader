@@ -1,4 +1,3 @@
-# import time
 import tensorflow as tf
 
 
@@ -51,8 +50,11 @@ def train_batch(session, neural_network, x_batch, y_batch):
         neural_network.output: y_batch
     }
     session.run(neural_network.optimizer, feed_dict=feed_dict)
-    # TODO: Implement asynchronous event loop and verify by
-    # checking that coinbase messages can still be received
+    # Because this server is not using asynchronous event
+    # loop, the server is unable to do anything else when
+    # training occurs.
+    # TODO: Implement asynchronous event loop using asyncio and
+    # verify by checking that coinbase messages can still be received
     # while training and sleeping for 30 seconds
     # for i in range(0, 30):
     #     print(f'sleeping... {i}')

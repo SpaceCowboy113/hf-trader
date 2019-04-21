@@ -1,5 +1,5 @@
-import pytest  # noqa: F401
 import maybe
+import pytest  # noqa: F401
 import testing_utilities
 
 
