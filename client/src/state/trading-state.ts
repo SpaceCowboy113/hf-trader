@@ -75,10 +75,12 @@ export function calculateProfit(tradingRecord: TradingRecord): number {
     return netWorth - tradingRecord.initial_usd;
 }
 
-interface Statistics {
+export interface Statistics {
     'algorithmic': TradingRecord;
     'q-learning': TradingRecord;
 }
+
+export type TradingStrategy = keyof Statistics;
 
 export function longPollTradingInfo(
     tradingRecordRegistry: TradingRecordRegistry,

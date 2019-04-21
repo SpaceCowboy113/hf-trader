@@ -1,14 +1,15 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import {
     TradingRecordRegistry,
     calculateNetWorth,
-    calculateProfit
+    calculateProfit,
+    TradingStrategy,
 } from '../state/trading-state';
 import { maybe } from '../functional/maybe';
 
 interface TradingRecordProps {
     tradingRecordRegistry: TradingRecordRegistry;
-    tradingStrategy: string;
+    tradingStrategy: TradingStrategy;
 }
 
 function displayNetWorth(props: TradingRecordProps): string {
@@ -59,7 +60,7 @@ function capitalizeWord(word: string): string {
     return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
-export default class TradingRecordView extends Component<TradingRecordProps, any> {
+export default class TradingRecordView extends PureComponent<TradingRecordProps> {
     constructor(props: TradingRecordProps) {
         super(props);
         props.tradingRecordRegistry.onChange.add(({ key, value }) => {

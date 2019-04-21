@@ -1,13 +1,8 @@
 
 import React, { Component } from 'react';
 import { Line } from 'react-chartjs-2';
-import {
-    TradingRecordRegistry,
-    TradingRecord,
-    Transaction,
-    Order,
-} from '../state/trading-state';
 import { Maybe } from '../functional/maybe';
+import { Order, TradingRecord, TradingRecordRegistry, Transaction } from '../state/trading-state';
 
 
 function getPointBorderColor(order: Order): Maybe<string> {
