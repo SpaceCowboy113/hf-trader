@@ -1,12 +1,12 @@
 {
     "sandbox": {
-        "passphrase": "fhsa044qoyf",
-        "b64secret": "ep9MmgHdGag57vd4ViqkeNQKgsH0jKT0N1WiqoVpwFN2F6pF/X5MA6UHaBJxobM9Mr7fQDdk2u+xuDrGFTuwTw==",
-        "key": "e5dd93146267edce3af8e9fe62e00114"
+        "passphrase": "",
+        "b64secret": "",
+        "key": ""
     },
     "production": {
-        "passphrase": "2s1c1i9kfef",
-        "b64secret": "KjXeZ41r1fyGweguIcGUnWyGpHwYX9oYjUjfzaJGP5IyRFzU21Ca8oAvjKPhBWeiHUXqsdwvTjoPhvoJQ1CIGw==",
-        "key": "e84223c3d79a7cc6449efd7e1559ba8d"
+        "passphrase": "",
+        "b64secret": "",
+        "key": ""
     }
 }
