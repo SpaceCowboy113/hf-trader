@@ -1,13 +1,30 @@
 import json
 
 from flask import Flask
-from flask_cors import CORS, cross_origin
+from flask_cors import cross_origin
 from flask_restful import Api, Resource
 from logger import logger
+from pyrsistent import PRecord, field
 from registries import TradingModelRegistry, TradingRecordRegistry
 
-# TODO: move into a configuration file
-CLIENT_URI = 'http://localhost:3000'
+
+class Defaults(PRecord):
+    web_client_uri = field(type=str, mandatory=True)
+
+
+def get_defaults(environment: str) -> Defaults:
+    '''
+    TODO: move get_defaults and get_authentication_keys (in coinbase_adapter.py)
+    into a config.py file that handles loading configuration constants.
+    '''
+    with open('config/default.json', 'r') as reader:
+        defaults = json.load(reader)[environment]
+        return Defaults.create(defaults)
+
+
+def get_cross_origin_uri() -> str:
+    web_client_uri = get_defaults('production').web_client_uri
+    return f'{web_client_uri}*'
 
 
 class Statistics(Resource):
@@ -19,7 +36,7 @@ class Statistics(Resource):
         self.trading_record_registry = trading_record_registry
         self.trading_model_registry = trading_model_registry
 
-    @cross_origin(origins=f'{CLIENT_URI}*')
+    @cross_origin(origins=get_cross_origin_uri())
     def get(self):
         '''
         TODO: parameterize 'algorithmic' and 'q-learning' Queries
@@ -42,7 +59,7 @@ class Transactions(Resource):
         self.trading_record_registry = trading_record_registry
         self.trading_model_registry = trading_model_registry
 
-    @cross_origin(origins=f'{CLIENT_URI}*')
+    @cross_origin(origins=get_cross_origin_uri())
     def get(self):
         '''
         TODO: parameterize 'algorithmic' and 'q-learning' Queries
@@ -61,7 +78,6 @@ def start(
     trading_model_registry: TradingModelRegistry
 ):
     flask = Flask(__name__)
-    CORS(flask)  # do i really need this line with the decorator?
     api = Api(flask)
 
     api.add_resource(

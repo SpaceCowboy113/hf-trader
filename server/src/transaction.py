@@ -100,7 +100,7 @@ def calculate_capital_gains(transactions: PairedTransactions) -> float:
 def calculate_taker_fee(quantity: float, exchange_rate: float) -> float:
     ''' Calculates the fee when making a coinbase pro taker order
 
-    An take your order is in order that is executed immediately and as such,
+    A taker order is an order that is executed immediately and as such,
     has a higher fee structure.
 
     TODO: update this function to pull the fee rate down dynamically from

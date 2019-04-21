@@ -1,0 +1,8 @@
+{
+    "sandbox": {
+        "web_client_uri": "http://localhost:3000"
+    },
+    "production": {
+        "web_client_uri": "http://localhost:3000"
+    }
+}

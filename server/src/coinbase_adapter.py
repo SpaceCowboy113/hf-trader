@@ -12,8 +12,8 @@ class CoinbaseKeys(PRecord):
     key = field(type=str, mandatory=True)
 
 
-def get_authentication_keys(path: str, environment: str) -> CoinbaseKeys:
-    """
+def get_authentication_keys(environment: str) -> CoinbaseKeys:
+    '''
     expects coinbase keys to be found in config/authentication.json
     expects authentication.json to have the following structure:
     {
@@ -28,17 +28,17 @@ def get_authentication_keys(path: str, environment: str) -> CoinbaseKeys:
             "key": ""
         }
     }
-    """
+    '''
     with open('config/authentication.json', 'r') as reader:
         auth_keys = json.load(reader)[environment]
-        return CoinbaseKeys(
-            passphrase=auth_keys['passphrase'],
-            b64secret=auth_keys['b64secret'],
-            key=auth_keys['key']
-        )
+        return CoinbaseKeys.create(auth_keys)
+        #     passphrase=auth_keys['passphrase'],
+        #     b64secret=auth_keys['b64secret'],
+        #     key=auth_keys['key']
+        # )
 
 
-keys = get_authentication_keys('config/authentication.json', 'production')
+keys = get_authentication_keys('production')
 
 # auth_client = cbpro.AuthenticatedClient(key, b64secret, passphrase)
 # Use the sandbox API (requires a different set of API access credentials)
