@@ -123,7 +123,7 @@ def pair_transaction(
     in transaction_history.csv.
     '''
     remaining_quantity_sold = sell_transaction.quantity
-    remaining_pending_transactions = []  # type: List[Transaction]
+    remaining_pending_transactions: List[Transaction] = []
     for buy_transaction in pending_transactions:
         is_complete_match = (
             remaining_quantity_sold >= 0 and

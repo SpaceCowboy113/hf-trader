@@ -8,7 +8,7 @@ from coinbase_websocket_client import (CoinbaseWebsocketClient,  # noqa: F401
                                        TradingRecordRegistry)
 from logger import logger
 
-trading_record_registry = {}  # type: TradingRecordRegistry
+trading_record_registry: TradingRecordRegistry = {}
 
 q_learning_description = (
     'Uses reinforcement learning to make trading decisions.  Neural network is used \n'
@@ -48,13 +48,13 @@ trading_record_registry['random'] = trading_record.construct(
 )
 
 session = tf.Session()
-trading_model_registry = {
+trading_model_registry: TradingModelRegistry = {
     'q-learning': q_learning_model.construct(session),
     'algorithmic': algorithmic_model.construct(
         selling_threshold=0.02,
         cut_losses_threshold=-0.05
     )
-}  # type: TradingModelRegistry
+}
 
 coinbase_websocket_client = CoinbaseWebsocketClient(trading_record_registry, trading_model_registry)
 coinbase_websocket_client.start()

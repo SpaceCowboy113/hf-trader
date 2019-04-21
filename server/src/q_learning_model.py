@@ -120,9 +120,9 @@ def train(model: QLearningModel) -> None:
     y_train = np.zeros((len(samples), 3))
 
     for index, sample in enumerate(samples):
-        state = sample['neural_network_input']  # type: QModelInput
-        action = sample['neural_network_prediction']  # type: TradingAction
-        reward = sample['reward']  # type: float
+        state: QModelInput = sample['neural_network_input']
+        action: TradingAction = sample['neural_network_prediction']
+        reward: float = sample['reward']
 
         predicted_actions = predict(state, model)
         logger.log(f'q-learning predicted_actions: {predicted_actions}')
@@ -132,7 +132,7 @@ def train(model: QLearningModel) -> None:
             predicted_actions = predicted_actions.set(action.order, np.float64(reward))
         else:
             GAMMA = 0.15
-            next_state = samples[index + 1]['neural_network_input']  # type: QModelInput
+            next_state: QModelInput = samples[index + 1]['neural_network_input']
             predicted_future_actions = predict(next_state, model)
 
             q_delta_action = choose_best_action(predicted_future_actions)
