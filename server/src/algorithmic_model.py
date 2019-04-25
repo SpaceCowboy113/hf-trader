@@ -52,7 +52,8 @@ def predict(
     amount_sold = len(model.pending_trades) - len(remaining_pending_trades)
 
     buy_sell_diff = 0
-    if should_buy(exchange_rate, rate_of_change, moving_average):
+    if should_buy(exchange_rate, rate_of_change, moving_average) and \
+            record.usd > exchange_rate:
         remaining_pending_trades = remaining_pending_trades.append(
             PendingTrade(buyers_price=exchange_rate)
         )
