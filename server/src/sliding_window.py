@@ -41,7 +41,7 @@ def average(n: int, window: SlidingWindow) -> float:
 
 
 def derivative(n: int, window: SlidingWindow) -> float:
-    if len(window.samples) < 2:
+    if n < 2 or len(window.samples) < n:
         return 0.0
     sliced_samples = time_slice(n, window.samples)
     epoch_average = 0.0
