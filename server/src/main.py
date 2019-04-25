@@ -1,5 +1,6 @@
 import algorithmic_model
 import q_learning_model
+import extrema_algorithm_model
 import tensorflow as tf
 import trading_record
 import web_application
@@ -37,6 +38,16 @@ trading_record_registry['algorithmic'] = trading_record.construct(
     100000.0
 )
 
+extrema_algorithm_description = (
+    'Looks for peaks and valleys and makes buy/sell decisions on the \n'
+    'upswings and downswings respectively.'
+)
+trading_record_registry['extrema-algorithm'] = trading_record.construct(
+    'Extrema Algorithm Trading Record',
+    extrema_algorithm_description,
+    100000.0
+)
+
 random_description = (
     'Makes trading decisions randomly.  Used as baseline to judge the \n'
     'effectiveness of other trading strategies.'
@@ -51,6 +62,10 @@ session = tf.Session()
 trading_model_registry: TradingModelRegistry = {
     'q-learning': q_learning_model.construct(session),
     'algorithmic': algorithmic_model.construct(
+        selling_threshold=0.02,
+        cut_losses_threshold=-0.05
+    ),
+    'extrema-algorithm': extrema_algorithm_model.construct(
         selling_threshold=0.02,
         cut_losses_threshold=-0.05
     )

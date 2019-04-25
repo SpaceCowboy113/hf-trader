@@ -5,6 +5,7 @@ import algorithmic_model
 import cbpro
 import maybe
 import q_learning_model
+import extrema_algorithm_model
 import result
 import trading_record
 from logger import logger
@@ -135,6 +136,25 @@ class CoinbaseWebsocketClient(cbpro.WebsocketClient):
         trading_record.statistics(self.trading_record_registry['algorithmic'])
         algorithmic_model.statistics(self.trading_model_registry['algorithmic'])
 
+    def extrema_algorithm_trade(self, price_info: PriceInfo) -> None:
+        record = trading_record.update_exchange_rate(
+            price_info,
+            self.trading_record_registry['extrema-algorithm']
+        )
+        action, self.trading_model_registry['extrema-algorithm'] = extrema_algorithm_model.predict(
+            record,
+            self.trading_model_registry['extrema-algorithm']
+        )
+
+        finished_order = trading_record.place_order(action, record)
+        self.trading_record_registry['extrema-algorithm'] = result.with_default(
+            self.trading_record_registry['extrema-algorithm'],
+            finished_order
+        )
+
+        trading_record.statistics(self.trading_record_registry['extrema-algorithm'])
+        extrema_algorithm_model.statistics(self.trading_model_registry['extrema-algorithm'])
+
     def random_trade(self, price_info: PriceInfo) -> None:
         record = trading_record.update_exchange_rate(
             price_info,
@@ -153,7 +173,7 @@ class CoinbaseWebsocketClient(cbpro.WebsocketClient):
     def on_message(self, message: CoinbaseMessage):
         self.message_count += 1
         maybe.map_all(
-            [self.algorithmic_trade, self.random_trade, self.q_learning_trade],
+            [self.algorithmic_trade, self.random_trade, self.q_learning_trade, self.extrema_algorithm_trade],
             parse_message(message)
         )
 
