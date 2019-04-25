@@ -107,7 +107,7 @@ export function longPollTradingInfo(
             }
             const algorithmicTradingRecord = result['algorithmic'];
             const qLearningTradingRecord = result['q-learning'];
-            const extremaAlgorithmRecord = result['extrema-algorithm'];
+            const extremaAlgorithmTradingRecord = result['extrema-algorithm'];
             tradingRecordRegistry.set(
                 'algorithmic',
                 algorithmicTradingRecord,
@@ -118,7 +118,7 @@ export function longPollTradingInfo(
             );
             tradingRecordRegistry.set(
                 'extrema-algorithm',
-                extremaAlgorithmRecord,
+                extremaAlgorithmTradingRecord,
             );
 
             // TODO: pull trading models from server and set here
