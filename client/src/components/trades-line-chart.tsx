@@ -153,7 +153,7 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
         // entire transaction window on push
         const labels: string[] = [];
         const exchangeRates: number[] = [];
-        const filteredExchangeRates: number[] = [];
+        const exchangeRatesFiltered: number[] = [];
         const pointExchangeRates: any[] = [];
         const pointBorderColors: any[] = [];
         const pointBackgroundColors: any[] = [];
@@ -163,15 +163,15 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
 
         tradingRecord.exchange_rates.samples.forEach((sample, index) => {
             const exchangeRate = sample.exchange_rate;
-            const filteredExchangeRate = sample.filtered_exchange_rate;
+            const exchangeRateFiltered = sample.exchange_rate_filtered;
 
             exchangeRates.push(exchangeRate);
-            filteredExchangeRates.push(filteredExchangeRate);
+            exchangeRatesFiltered.push(exchangeRateFiltered);
         });
         const exchangeRateLine = this.state.datasets[0];
         exchangeRateLine.data = exchangeRates;
         const filteredExchangeRateLine = this.state.datasets[2];
-        filteredExchangeRateLine.data = filteredExchangeRates;
+        exchangeRateFilteredLine.data = exchangeRatesFiltered;
 
         getTransactions(tradingRecord.transaction_window).forEach((transaction, index) => {
             const pointBorderColor = getPointBorderColor(transaction.order);
@@ -195,7 +195,7 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
         pointLine.pointHoverRadius = pointHoverRadii;
         pointLine.pointHitRadius = pointHitRadii;
 
-        const datasets = [exchangeRateLine, pointLine, filteredExchangeRateLine];
+        const datasets = [exchangeRateLine, pointLine, exchangeRateFilteredLine];
 
         this.setState({
             labels,

@@ -9,8 +9,8 @@ from pyrsistent import PRecord, PVector, field, pvector_field
 
 class SlidingWindowSample(PRecord):
     exchange_rate = field(type=float, mandatory=True)
-    filtered_exchange_rate = field(type=float, mandatory=False)
-    filtered_exchange_rate_rate_of_change = field(type=float, mandatory=False)
+    exchange_rate_filtered = field(type=float, mandatory=False)
+    exchange_rate_rate_of_change_filtered = field(type=float, mandatory=False)
     epoch = field(type=float, mandatory=True)
 
 
@@ -59,39 +59,39 @@ def add(sample: SlidingWindowSample, window: SlidingWindow) -> SlidingWindow:
 def filter_sample(sample: SlidingWindowSample, window: SlidingWindow
     ) -> SlidingWindowSample:
     length = len(window.samples)
-    filtered_exchange_rate = 0.0
-    filtered_exchange_rate_rate_of_change = 0.0
+    exchange_rate_filtered = 0.0
+    exchange_rate_rate_of_change_filtered = 0.0
     if length == 0:
-        filtered_exchange_rate_rate_of_change = 0.0
-        filtered_exchange_rate = sample.exchange_rate
+        exchange_rate_rate_of_change_filtered = 0.0
+        exchange_rate_filtered = sample.exchange_rate
     elif length == 1:
         t = sample.epoch - window.samples[0].epoch
         if t > 0:
             diff = sample.exchange_rate - window.samples[0].exchange_rate
-            filtered_exchange_rate_rate_of_change = diff/t
+            exchange_rate_rate_of_change_filtered = diff/t
         else:
-            filtered_exchange_rate_rate_of_change = 0.0
+            exchange_rate_rate_of_change_filtered = 0.0
 
-        filtered_exchange_rate = sample.exchange_rate
+        exchange_rate_filtered = sample.exchange_rate
     else:
-        prev_rate_of_change = window.samples[-1].filtered_exchange_rate_rate_of_change
+        prev_rate_of_change = window.samples[-1].exchange_rate_rate_of_change_filtered
         t = sample.epoch - window.samples[-1].epoch
         if t > 0:
             diff = sample.exchange_rate - window.samples[-1].exchange_rate
             rate_of_change = diff/t
-            filtered_exchange_rate_rate_of_change = (prev_rate_of_change +
+            exchange_rate_rate_of_change_filtered = (prev_rate_of_change +
                 (rate_of_change - prev_rate_of_change) *
                 min(1, t * window.second_order_filter_time_constant))
         else:
-            filtered_exchange_rate_rate_of_change = prev_rate_of_change
+            exchange_rate_rate_of_change_filtered = prev_rate_of_change
 
-        prev_val = window.samples[-1].filtered_exchange_rate
-        filtered_exchange_rate = (prev_val +
+        prev_val = window.samples[-1].exchange_rate_filtered
+        exchange_rate_filtered = (prev_val +
             window.filter_order_ratio * (sample.exchange_rate - prev_val) *
             min(1, t * window.first_order_filter_time_constant) +
             (1 - window.filter_order_ratio) * prev_rate_of_change * t)
-    sample = sample.set('filtered_exchange_rate', filtered_exchange_rate)
-    sample = sample.set('filtered_exchange_rate_rate_of_change', filtered_exchange_rate_rate_of_change)
+    sample = sample.set('exchange_rate_filtered', exchange_rate_filtered)
+    sample = sample.set('exchange_rate_rate_of_change_filtered', exchange_rate_rate_of_change_filtered)
     return sample
 
 
@@ -142,10 +142,10 @@ def current_exchange_rate(window: SlidingWindow) -> Union[float, None]:
     return window.samples[-1].exchange_rate
 
 
-def current_filtered_exchange_rate(window: SlidingWindow) -> Union[float, None]:
+def current_exchange_rate_filtered(window: SlidingWindow) -> Union[float, None]:
     if len(window.samples) == 0:
         return None
-    return window.samples[-1].filtered_exchange_rate
+    return window.samples[-1].exchange_rate_filtered
 
 
 def current_epoch(window: SlidingWindow) -> Union[float, None]:

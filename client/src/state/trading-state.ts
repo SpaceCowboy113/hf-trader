@@ -26,7 +26,7 @@ export interface Transaction {
 // TODO: rename this to ExchangeRateSample
 export interface SlidingWindowSample {
     exchange_rate: number;
-    filtered_exchange_rate: number;
+    exchange_rate_filtered: number;
     epoch: number;
 }
 
