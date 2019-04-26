@@ -2,7 +2,7 @@ import operator
 from functools import reduce
 from typing import Union
 
-from invariants import must_be_positive
+from invariants import must_be_positive, must_be_zero_to_one
 from pipetools import X, pipe
 from pyrsistent import PRecord, PVector, field, pvector_field
 
@@ -17,25 +17,40 @@ class SlidingWindowSample(PRecord):
 class SlidingWindow(PRecord):
     samples = pvector_field(SlidingWindowSample)
     maximum_size = field(type=int, mandatory=True, invariant=must_be_positive)
+    first_order_filter_time_constant = field(
+        type=float, mandatory=True, invariant=must_be_positive)
+    second_order_filter_time_constant = field(
+        type=float, mandatory=True, invariant=must_be_positive)
+    filter_order_ratio = field(type=float, mandatory=True,
+        invariant=must_be_zero_to_one)
 
 
-def construct(maximum_size: int = 1) -> SlidingWindow:
+def construct(
+    maximum_size: int = 1,
+    first_order_filter_time_constant: float = 0.1,
+    second_order_filter_time_constant: float = 0.1,
+    filter_order_ratio: float = 0.25
+    ) -> SlidingWindow:
     return SlidingWindow(
         samples=[],
-        maximum_size=maximum_size
+        maximum_size=maximum_size,
+        first_order_filter_time_constant=first_order_filter_time_constant,
+        second_order_filter_time_constant=second_order_filter_time_constant,
+        filter_order_ratio=filter_order_ratio
     )
 
 
 def add(sample: SlidingWindowSample, window: SlidingWindow) -> SlidingWindow:
-    filtered_sample = filter_sample(sample, window)
+    sample = filter_sample(sample, window)
 
     # Pop oldest sample to keep length of samples less than maximum size
     if len(window.samples) >= window.maximum_size:
-        return window.update({'samples': window.samples.append(filtered_sample)[1:]})
-    return window.update({'samples': window.samples.append(filtered_sample)})
+        return window.update({'samples': window.samples.append(sample)[1:]})
+    return window.update({'samples': window.samples.append(sample)})
 
 
-def filter_sample(sample: SlidingWindowSample, window: SlidingWindow) -> SlidingWindowSample:
+def filter_sample(sample: SlidingWindowSample, window: SlidingWindow
+    ) -> SlidingWindowSample:
     length = len(window.samples)
     filtered_exchange_rate = 0.0
     filtered_exchange_rate_rate_of_change = 0.0
@@ -58,16 +73,20 @@ def filter_sample(sample: SlidingWindowSample, window: SlidingWindow) -> Sliding
             diff = sample.exchange_rate - window.samples[-1].exchange_rate
             rate_of_change = diff/t
             filtered_exchange_rate_rate_of_change = (prev_rate_of_change +
-                (rate_of_change - prev_rate_of_change) * min(1, t * 0.1))
+                (rate_of_change - prev_rate_of_change) *
+                min(1, t * window.second_order_filter_time_constant))
         else:
             filtered_exchange_rate_rate_of_change = prev_rate_of_change
 
         prev_val = window.samples[-1].filtered_exchange_rate
-        filter_order_ratio = 0.25
-        filtered_exchange_rate = prev_val + filter_order_ratio * (sample.exchange_rate - prev_val) * min(1, t * 0.1) + (1 - filter_order_ratio) * prev_rate_of_change * t
-    filtered_sample = sample.set('filtered_exchange_rate', filtered_exchange_rate)
-    filtered_sample = filtered_sample.set('filtered_exchange_rate_rate_of_change', filtered_exchange_rate_rate_of_change)
-    return filter_sample
+        filtered_exchange_rate = (prev_val +
+            window.filter_order_ratio * (sample.exchange_rate - prev_val) *
+            min(1, t * window.first_order_filter_time_constant) +
+            (1 - window.filter_order_ratio) * prev_rate_of_change * t)
+    sample = sample.set('filtered_exchange_rate', filtered_exchange_rate)
+    sample = sample.set('filtered_exchange_rate_rate_of_change', filtered_exchange_rate_rate_of_change)
+    return sample
+
 
 
 def average(n: int, window: SlidingWindow) -> float:
