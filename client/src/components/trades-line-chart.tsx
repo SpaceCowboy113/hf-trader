@@ -170,7 +170,7 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
         });
         const exchangeRateLine = this.state.datasets[0];
         exchangeRateLine.data = exchangeRates;
-        const filteredExchangeRateLine = this.state.datasets[2];
+        const exchangeRateFilteredLine = this.state.datasets[2];
         exchangeRateFilteredLine.data = exchangeRatesFiltered;
 
         getTransactions(tradingRecord.transaction_window).forEach((transaction, index) => {
