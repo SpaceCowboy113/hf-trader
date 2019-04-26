@@ -98,4 +98,4 @@ def start(
         }
     )
 
-    flask.run(debug=True)
+    flask.run(debug=False)
