@@ -7,6 +7,8 @@ from coinbase_websocket_client import (CoinbaseWebsocketClient,  # noqa: F401
                                        TradingModelRegistry,
                                        TradingRecordRegistry)
 from logger import logger
+import signal
+import sys
 
 trading_record_registry: TradingRecordRegistry = {}
 
@@ -62,3 +64,12 @@ coinbase_websocket_client.start()
 logger.log(f'{coinbase_websocket_client.url} {coinbase_websocket_client.products}')
 
 web_application.start(trading_record_registry, trading_model_registry)
+
+
+def close_hf_trader(sig, frame):
+    logger.info('closing high-frequency trader')
+    coinbase_websocket_client.close()
+    sys.exit(0)
+
+
+signal.signal(signal.SIGINT, close_hf_trader)
