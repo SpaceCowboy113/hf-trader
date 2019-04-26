@@ -10,6 +10,13 @@ from logger import logger
 import signal
 import sys
 
+
+def close_hf_trader(sig, frame):
+    logger.info('closing high-frequency trader')
+    coinbase_websocket_client.close()
+    sys.exit(0)
+
+
 trading_record_registry: TradingRecordRegistry = {}
 
 q_learning_description = (
@@ -59,18 +66,19 @@ trading_model_registry: TradingModelRegistry = {
 }
 
 coinbase_websocket_client = CoinbaseWebsocketClient(trading_record_registry, trading_model_registry)
+
+if hasattr(signal, 'SIGINT'):
+    logger.log('listening for ctrl-c on signal.SIGINT')
+    signal.signal(signal.SIGINT, close_hf_trader)
+elif hasattr(signal, 'SIGBREAK'):
+    logger.warn('listening for ctrl-c on signal.SIGBREAK')
+    signal.signal(signal.SIGBREAK, close_hf_trader)
+else:
+    logger.error('unable to set up ctrl-c listeners')
+
+
 coinbase_websocket_client.start()
 
 logger.log(f'{coinbase_websocket_client.url} {coinbase_websocket_client.products}')
 
 web_application.start(trading_record_registry, trading_model_registry)
-
-
-def close_hf_trader(sig, frame):
-    logger.info('closing high-frequency trader')
-    coinbase_websocket_client.close()
-    sys.exit(0)
-
-
-signal.signal(signal.SIGINT, close_hf_trader)
-signal.signal(signal.SIGBREAK, close_hf_trader)
