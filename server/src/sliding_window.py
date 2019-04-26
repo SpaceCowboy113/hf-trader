@@ -41,16 +41,27 @@ def average(n: int, window: SlidingWindow) -> float:
 
 
 def derivative(n: int, window: SlidingWindow) -> float:
-    if len(window.samples) < 2:
+    if n < 2 or len(window.samples) < n:
         return 0.0
     sliced_samples = time_slice(n, window.samples)
-    first_exchange_rate = sliced_samples[0]['exchange_rate']
-    last_exchange_rate = sliced_samples[-1]['exchange_rate']
-    first_epoch = sliced_samples[0]['epoch']
-    last_epoch = sliced_samples[-1]['epoch']
-    exchange_rate_delta = last_exchange_rate - first_exchange_rate
-    epoch_delta = last_epoch - first_epoch
-    return exchange_rate_delta / epoch_delta if epoch_delta != 0 else 0.0
+    epoch_average = 0.0
+    exchange_rate_average = 0.0
+    for sample in sliced_samples:
+        epoch_average += sample['epoch']
+        exchange_rate_average += sample['exchange_rate']
+    epoch_average /= len(sliced_samples)
+    exchange_rate_average /= len(sliced_samples)
+
+    # See https://www.varsitytutors.com/hotmath/hotmath_help/topics/line-of-best-fit
+    numerator = 0.0
+    denom = 0.0
+    for sample in sliced_samples:
+        epoch_error = sample['epoch'] - epoch_average
+        exchange_rate_error =  sample['exchange_rate'] - exchange_rate_average
+        numerator += epoch_error * exchange_rate_error
+        denom += epoch_error * epoch_error
+
+    return numerator / denom if denom != 0 else 0.0
 
 
 # Slices the (n) most recent samples in time
