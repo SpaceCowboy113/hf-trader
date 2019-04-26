@@ -52,7 +52,7 @@ def predict(
     amount_sold = len(model.pending_trades) - len(remaining_pending_trades)
 
     buy_sell_diff = 0
-    if should_buy(exchange_rate, rate_of_change, moving_average):
+    if should_buy(exchange_rate, rate_of_change, moving_average, record.usd):
         remaining_pending_trades = remaining_pending_trades.append(
             PendingTrade(buyers_price=exchange_rate)
         )
@@ -68,8 +68,10 @@ def predict(
         return TradingAction(order='hold', amount=0), updated_model
 
 
-def should_buy(exchange_rate: float, rate_of_change: float, moving_average: float) -> bool:
-    if rate_of_change < 0 and moving_average > exchange_rate:
+def should_buy(exchange_rate: float, rate_of_change: float,
+        moving_average: float, usd_available: float) -> bool:
+    if (rate_of_change < 0 and moving_average > exchange_rate and
+            usd_available > exchange_rate):
         return True
     else:
         return False
