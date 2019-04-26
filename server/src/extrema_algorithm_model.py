@@ -19,6 +19,7 @@ class ExtremaAlgorithmModel(PRecord):
     pending_trades = pvector_field(PendingTrade)
     selling_threshold = field(type=float)
     cut_losses_threshold = field(type=float)
+    last_extreme_acted_on = field(type=float)
 
 
 def construct(
@@ -28,7 +29,8 @@ def construct(
     return ExtremaAlgorithmModel(
         pending_trades=[],
         selling_threshold=selling_threshold,
-        cut_losses_threshold=cut_losses_threshold
+        cut_losses_threshold=cut_losses_threshold,
+        last_extreme_acted_on=0.0
     )
 
 
@@ -36,41 +38,42 @@ def predict(
     record: TradingRecord,
     model: ExtremaAlgorithmModel
 ) -> Tuple[TradingAction, ExtremaAlgorithmModel]:
+    last_extreme = maybe.with_default(0.0, trading_record.get_last_extreme(record))
     exchange_rate = maybe.with_default(0.0, trading_record.get_exchange_rate(record))
-    rate_of_change = maybe.with_default(0.0, trading_record.get_rate_of_change(record))
     moving_average = maybe.with_default(0.0, trading_record.get_moving_average(record))
 
-    should_sell_partial = partial(
-        should_sell,
-        exchange_rate,
-        model.selling_threshold,
-        model.cut_losses_threshold
-    )
-    remaining_pending_trades = pvector(
-        [trade for trade in model.pending_trades if not should_sell_partial(trade)]
-    )
-    amount_sold = len(model.pending_trades) - len(remaining_pending_trades)
-
-    buy_sell_diff = 0
-    if should_buy(exchange_rate, rate_of_change, moving_average) and \
-            record.usd > exchange_rate:
-        remaining_pending_trades = remaining_pending_trades.append(
-            PendingTrade(buyers_price=exchange_rate)
+    if (last_extreme > 0 and last_extreme - model.last_extreme_acted_on > 0.001):
+        should_sell_partial = partial(
+            should_sell,
+            exchange_rate,
+            model.selling_threshold,
+            model.cut_losses_threshold
         )
-        buy_sell_diff += 1
-    buy_sell_diff -= amount_sold
+        remaining_pending_trades = pvector(
+            [trade for trade in model.pending_trades if not should_sell_partial(trade)]
+        )
+        amount_sold = len(model.pending_trades) - len(remaining_pending_trades)
 
-    updated_model = model.set('pending_trades', remaining_pending_trades)
-    if buy_sell_diff < 0:
-        return TradingAction(order='sell', amount=abs(buy_sell_diff)), updated_model
-    elif buy_sell_diff > 0:
-        return TradingAction(order='buy', amount=buy_sell_diff), updated_model
-    else:
-        return TradingAction(order='hold', amount=0), updated_model
+        buy_sell_diff = 0
+        if should_buy(exchange_rate, moving_average, record.usd):
+            remaining_pending_trades = remaining_pending_trades.append(
+                PendingTrade(buyers_price=exchange_rate)
+            )
+            buy_sell_diff += 1
+        buy_sell_diff -= amount_sold
+
+        updated_model = model.set('pending_trades', remaining_pending_trades)
+        updated_model = model.set('last_extreme_acted_on', last_extreme)
+        if buy_sell_diff < 0:
+            return TradingAction(order='sell', amount=abs(buy_sell_diff)), updated_model
+        elif buy_sell_diff > 0:
+            return TradingAction(order='buy', amount=buy_sell_diff), updated_model
+    return TradingAction(order='hold', amount=0), model
 
 
-def should_buy(exchange_rate: float, rate_of_change: float, moving_average: float) -> bool:
-    if rate_of_change < 0 and moving_average > exchange_rate:
+def should_buy(exchange_rate: float, moving_average: float,
+        usd_available: float) -> bool:
+    if moving_average > exchange_rate and usd_available > exchange_rate:
         return True
     else:
         return False
@@ -93,3 +96,4 @@ def should_sell(
 
 def statistics(model: ExtremaAlgorithmModel) -> None:
     logger.log(f'Pending Trades: {len(model.pending_trades)}')
+    logger.log(f'Last extreme acted on: {model.last_extreme_acted_on}')
