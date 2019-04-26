@@ -73,3 +73,4 @@ def close_hf_trader(sig, frame):
 
 
 signal.signal(signal.SIGINT, close_hf_trader)
+signal.signal(signal.SIGBREAK, close_hf_trader)
