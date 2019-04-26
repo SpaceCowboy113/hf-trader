@@ -17,10 +17,17 @@ class SlidingWindowSample(PRecord):
 class SlidingWindow(PRecord):
     samples = pvector_field(SlidingWindowSample)
     maximum_size = field(type=int, mandatory=True, invariant=must_be_positive)
+    # Pararmeterizes the response of the first-order filter. Larger values make
+    # the filter more responsive but preserve more noise in the signal.
     first_order_filter_time_constant = field(
         type=float, mandatory=True, invariant=must_be_positive)
+    # Pararmeterizes the response of the second-order filter. Larger values make
+    # the filter more responsive but preserve more noise in the signal.
     second_order_filter_time_constant = field(
         type=float, mandatory=True, invariant=must_be_positive)
+    # The ratio of contributions between the first and second order filters. A
+    # value of 0.25 means that (1/4) of the filter response comes from the first
+    # order filter and (3/4) of the response comes from the second order filter.
     filter_order_ratio = field(type=float, mandatory=True,
         invariant=must_be_zero_to_one)
 
