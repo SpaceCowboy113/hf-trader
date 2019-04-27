@@ -45,4 +45,4 @@ class logger:
 
     @staticmethod
     def info(message):
-        print(f'{TerminalColors.UNDERLINE}Info      {message}{TerminalColors.ENDC}')
+        print(f'{TerminalColors.OKBLUE}Info      {message}{TerminalColors.ENDC}')
