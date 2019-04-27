@@ -38,7 +38,7 @@ def construct(
     maximum_size: int = 1,
     first_order_filter_time_constant: float = 1.0,
     second_order_filter_time_constant: float = 0.1,
-    filter_order_ratio: float = 0.1
+    filter_order_ratio: float = 0.33
     ) -> SlidingWindow:
     return SlidingWindow(
         samples=[],
