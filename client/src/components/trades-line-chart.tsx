@@ -121,7 +121,7 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
                     pointHitRadius: []
                 },
                 {
-                    label: "Filtered Exchange Rate",
+                    label: "Filtered",
                     fill: false,
                     lineTension: 0.1,
                     backgroundColor: 'rgba(95,75,182,0.8)',
@@ -130,17 +130,59 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
                     borderDash: [],
                     borderDashOffset: 0.0,
                     borderJoinStyle: 'miter',
-                    pointBorderColor: 'rgba(75,192,192,1)',
+                    pointBorderColor: 'rgba(95,75,182,1)',
                     pointBackgroundColor: '#fff',
                     pointBorderWidth: 1,
                     pointHoverRadius: 5,
-                    pointHoverBackgroundColor: 'rgba(75,192,192,1)',
+                    pointHoverBackgroundColor: 'rgba(95,75,182,1)',
                     pointHoverBorderColor: 'rgba(220,220,220,1)',
                     pointHoverBorderWidth: 2,
                     pointRadius: 0,
                     pointHitRadius: 10,
                     data: []
                 },
+                {
+                    label: "Moving Average (10)",
+                    fill: false,
+                    lineTension: 0.1,
+                    backgroundColor: 'rgba(237,174,73,0.8)',
+                    borderColor: 'rgba(237,174,73,0.95)',
+                    borderCapStyle: 'butt',
+                    borderDash: [],
+                    borderDashOffset: 0.0,
+                    borderJoinStyle: 'miter',
+                    pointBorderColor: 'rgba(237,174,73,1)',
+                    pointBackgroundColor: '#fff',
+                    pointBorderWidth: 1,
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: 'rgba(237,174,73,1)',
+                    pointHoverBorderColor: 'rgba(220,220,220,1)',
+                    pointHoverBorderWidth: 2,
+                    pointRadius: 0,
+                    pointHitRadius: 10,
+                    data: []
+                },
+                {
+                    label: "Moving Average (100)",
+                    fill: false,
+                    lineTension: 0.1,
+                    backgroundColor: 'rgba(209,73,91,0.8)',
+                    borderColor: 'rgba(209,73,91,0.95)',
+                    borderCapStyle: 'butt',
+                    borderDash: [],
+                    borderDashOffset: 0.0,
+                    borderJoinStyle: 'miter',
+                    pointBorderColor: 'rgba(209,73,91,1)',
+                    pointBackgroundColor: '#fff',
+                    pointBorderWidth: 1,
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: 'rgba(209,73,91,1)',
+                    pointHoverBorderColor: 'rgba(220,220,220,1)',
+                    pointHoverBorderWidth: 2,
+                    pointRadius: 0,
+                    pointHitRadius: 10,
+                    data: []
+                }
             ]
         };
         this.setState(initialState);
@@ -154,6 +196,8 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
         const labels: string[] = [];
         const exchangeRates: number[] = [];
         const exchangeRatesFiltered: number[] = [];
+        const exchangeRateMovingAverages10: number[] = [];
+        const exchangeRateMovingAverages100: number[] = [];
         const pointExchangeRates: any[] = [];
         const pointBorderColors: any[] = [];
         const pointBackgroundColors: any[] = [];
@@ -164,14 +208,22 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
         tradingRecord.exchange_rates.samples.forEach((sample, index) => {
             const exchangeRate = sample.exchange_rate;
             const exchangeRateFiltered = sample.exchange_rate_filtered;
+            const exchangeRateMovingAverage10 = sample.exchange_rate_moving_average_10
+            const exchangeRateMovingAverage100 = sample.exchange_rate_moving_average_100
 
             exchangeRates.push(exchangeRate);
             exchangeRatesFiltered.push(exchangeRateFiltered);
+            exchangeRateMovingAverages10.push(exchangeRateMovingAverage10)
+            exchangeRateMovingAverages100.push(exchangeRateMovingAverage100)
         });
         const exchangeRateLine = this.state.datasets[0];
         exchangeRateLine.data = exchangeRates;
         const exchangeRateFilteredLine = this.state.datasets[2];
         exchangeRateFilteredLine.data = exchangeRatesFiltered;
+        const exchangeRateMovingAverage10Line = this.state.datasets[3];
+        exchangeRateMovingAverage10Line.data = exchangeRateMovingAverages10;
+        const exchangeRateMovingAverage100Line = this.state.datasets[4];
+        exchangeRateMovingAverage100Line.data = exchangeRateMovingAverages100;
 
         getTransactions(tradingRecord.transaction_window).forEach((transaction, index) => {
             const pointBorderColor = getPointBorderColor(transaction.order);
@@ -195,7 +247,8 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
         pointLine.pointHoverRadius = pointHoverRadii;
         pointLine.pointHitRadius = pointHitRadii;
 
-        const datasets = [exchangeRateLine, pointLine, exchangeRateFilteredLine];
+        const datasets = [exchangeRateLine, pointLine, exchangeRateFilteredLine,
+            exchangeRateMovingAverage10Line, exchangeRateMovingAverage100Line];
 
         this.setState({
             labels,

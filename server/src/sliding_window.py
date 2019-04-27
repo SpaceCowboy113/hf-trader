@@ -11,6 +11,8 @@ class SlidingWindowSample(PRecord):
     exchange_rate = field(type=float, mandatory=True)
     exchange_rate_filtered = field(type=float, mandatory=False)
     exchange_rate_rate_of_change_filtered = field(type=float, mandatory=False)
+    exchange_rate_moving_average_10 = field(type=float, mandatory=False)
+    exchange_rate_moving_average_100 = field(type=float, mandatory=False)
     epoch = field(type=float, mandatory=True)
 
 
@@ -51,9 +53,17 @@ def add(sample: SlidingWindowSample, window: SlidingWindow) -> SlidingWindow:
     sample = filter_sample(sample, window)
 
     # Pop oldest sample to keep length of samples less than maximum size
-    if len(window.samples) >= window.maximum_size:
-        return window.update({'samples': window.samples.append(sample)[1:]})
-    return window.update({'samples': window.samples.append(sample)})
+    window = (window.update({'samples': window.samples.append(sample)[1:]})
+        if len(window.samples) >= window.maximum_size else
+        window.update({'samples': window.samples.append(sample)}))
+
+    exchange_rate_moving_average_10 = average(10, window)
+    sample = sample.set('exchange_rate_moving_average_10',
+        exchange_rate_moving_average_10)
+    exchange_rate_moving_average_100 = average(100, window)
+    sample = sample.set('exchange_rate_moving_average_100',
+        exchange_rate_moving_average_100)
+    return window.update({'samples': window.samples.set(-1, sample)})
 
 
 def filter_sample(sample: SlidingWindowSample, window: SlidingWindow

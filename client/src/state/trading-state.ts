@@ -27,6 +27,8 @@ export interface Transaction {
 export interface SlidingWindowSample {
     exchange_rate: number;
     exchange_rate_filtered: number;
+    exchange_rate_moving_average_10: number;
+    exchange_rate_moving_average_100: number;
     epoch: number;
 }
 
