@@ -7,6 +7,7 @@ import maybe
 import q_learning_model
 import result
 import trading_record
+import zulu_time
 from logger import logger
 from maybe import Maybe
 from pyrsistent import PRecord, field
@@ -45,7 +46,7 @@ def parse_message(msg: CoinbaseMessage) -> Maybe[PriceInfo]:
     )
     if has_price_changed:
         exchange_rate = float(msg['price'])
-        epoch = trading_record.get_epoch(msg['time'])
+        epoch = zulu_time.get_epoch(msg['time'])
 
         return exchange_rate, epoch
     return None

@@ -23,10 +23,15 @@ function getPointBackgroundColor(order: Order): Maybe<string> {
     }
 }
 
-// TODO: create a more robust way of formatting timestamp
-//       by converting to time object
-function getLabel(timestamp: string): string {
-    return timestamp.slice(14, timestamp.length - 4);
+/**
+ * Converts an epoch to a UTC timestamp
+ * TODO: Detect time zone and convert timestamp accordingly.
+ * (Probably should just use a library to do this)
+ */
+function getLabel(epoch: number): string {
+    const date = new Date(0);
+    date.setUTCSeconds(epoch);
+    return date.toLocaleTimeString();
 }
 
 interface TradesLineChartProps {
@@ -237,7 +242,7 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
             pointRadii.push(pointRadius);
             pointHitRadii.push(pointHitRadius);
             pointHoverRadii.push(pointHoverRadius);
-            labels.push(getLabel(transaction.timestamp));
+            labels.push(getLabel(transaction.epoch));
         });
         const pointLine = this.state.datasets[1];
         pointLine.data = exchangeRates;

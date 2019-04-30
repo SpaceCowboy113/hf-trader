@@ -18,7 +18,7 @@ export interface Transaction {
     label: string;
     quantity: number;
     exchange_rate: number;
-    timestamp: string;
+    epoch: number;
     fees: number;
     order: Order;
 }
