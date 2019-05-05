@@ -58,11 +58,9 @@ def add(sample: SlidingWindowSample, window: SlidingWindow) -> SlidingWindow:
         window.update({'samples': window.samples.append(sample)}))
 
     exchange_rate_moving_average_10 = average(10, window)
-    sample = sample.set('exchange_rate_moving_average_10',
-        exchange_rate_moving_average_10)
     exchange_rate_moving_average_100 = average(100, window)
-    sample = sample.set('exchange_rate_moving_average_100',
-        exchange_rate_moving_average_100)
+    sample.update({'exchange_rate_moving_average_10' : exchange_rate_moving_average_10, 
+        'exchange_rate_moving_average_100' : exchange_rate_moving_average_100})
     return window.update({'samples': window.samples.set(-1, sample)})
 
 
