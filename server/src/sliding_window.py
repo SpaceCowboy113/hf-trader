@@ -31,7 +31,7 @@ class SlidingWindow(PRecord):
     # value of 0.25 means that (1/4) of the filter response comes from the first
     # order filter and (3/4) of the response comes from the second order filter.
     filter_order_ratio = field(type=float, mandatory=True,
-        invariant=must_be_zero_to_one)
+                               invariant=must_be_zero_to_one)
 
 
 def construct(
@@ -39,7 +39,7 @@ def construct(
     first_order_filter_time_constant: float = 1.0,
     second_order_filter_time_constant: float = 0.1,
     filter_order_ratio: float = 0.33
-    ) -> SlidingWindow:
+) -> SlidingWindow:
     return SlidingWindow(
         samples=[],
         maximum_size=maximum_size,
@@ -49,23 +49,30 @@ def construct(
     )
 
 
+def next_moving_average(
+    n: int,
+    window: SlidingWindow,
+    next_sample: SlidingWindowSample,
+) -> float:
+    last_moving_average = average(n, window)
+    last_window_length = len(time_slice(n, window.samples))
+    sum = last_moving_average * last_window_length + next_sample.exchange_rate
+    return sum / (last_window_length + 1)
+
+
 def add(sample: SlidingWindowSample, window: SlidingWindow) -> SlidingWindow:
-    sample = filter_sample(sample, window)
+    updated_sample = filter_sample(sample, window).update({
+        'exchange_rate_moving_average_10': next_moving_average(10, window, sample),
+        'exchange_rate_moving_average_100': next_moving_average(100, window, sample),
+    })
 
     # Pop oldest sample to keep length of samples less than maximum size
-    window = (window.update({'samples': window.samples.append(sample)[1:]})
-        if len(window.samples) >= window.maximum_size else
-        window.update({'samples': window.samples.append(sample)}))
-
-    exchange_rate_moving_average_10 = average(10, window)
-    exchange_rate_moving_average_100 = average(100, window)
-    sample.update({'exchange_rate_moving_average_10' : exchange_rate_moving_average_10, 
-        'exchange_rate_moving_average_100' : exchange_rate_moving_average_100})
-    return window.update({'samples': window.samples.set(-1, sample)})
+    if len(window.samples) >= window.maximum_size:
+        return window.update({'samples': window.samples.append(updated_sample)[1:]})
+    return window.update({'samples': window.samples.append(updated_sample)})
 
 
-def filter_sample(sample: SlidingWindowSample, window: SlidingWindow
-    ) -> SlidingWindowSample:
+def filter_sample(sample: SlidingWindowSample, window: SlidingWindow) -> SlidingWindowSample:
     length = len(window.samples)
     exchange_rate_filtered = 0.0
     exchange_rate_rate_of_change_filtered = 0.0
@@ -87,21 +94,25 @@ def filter_sample(sample: SlidingWindowSample, window: SlidingWindow
         if t > 0:
             diff = sample.exchange_rate - window.samples[-1].exchange_rate
             rate_of_change = diff/t
-            exchange_rate_rate_of_change_filtered = (prev_rate_of_change +
+            exchange_rate_rate_of_change_filtered = (
+                prev_rate_of_change +
                 (rate_of_change - prev_rate_of_change) *
-                min(1, t * window.second_order_filter_time_constant))
+                min(1, t * window.second_order_filter_time_constant)
+            )
         else:
             exchange_rate_rate_of_change_filtered = prev_rate_of_change
 
         prev_val = window.samples[-1].exchange_rate_filtered
-        exchange_rate_filtered = (prev_val +
+        exchange_rate_filtered = (
+            prev_val +
             window.filter_order_ratio * (sample.exchange_rate - prev_val) *
             min(1, t * window.first_order_filter_time_constant) +
-            (1 - window.filter_order_ratio) * prev_rate_of_change * t)
-    sample = sample.set('exchange_rate_filtered', exchange_rate_filtered)
-    sample = sample.set('exchange_rate_rate_of_change_filtered', exchange_rate_rate_of_change_filtered)
-    return sample
-
+            (1 - window.filter_order_ratio) * prev_rate_of_change * t
+        )
+    return sample.update({
+        'exchange_rate_filtered': exchange_rate_filtered,
+        'exchange_rate_rate_of_change_filtered': exchange_rate_rate_of_change_filtered
+    })
 
 
 def average(n: int, window: SlidingWindow) -> float:
@@ -130,7 +141,7 @@ def derivative(n: int, window: SlidingWindow) -> float:
     denom = 0.0
     for sample in sliced_samples:
         epoch_error = sample['epoch'] - epoch_average
-        exchange_rate_error =  sample['exchange_rate'] - exchange_rate_average
+        exchange_rate_error = sample['exchange_rate'] - exchange_rate_average
         numerator += epoch_error * exchange_rate_error
         denom += epoch_error * epoch_error
 
