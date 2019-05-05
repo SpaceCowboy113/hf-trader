@@ -226,6 +226,8 @@ def statistics(record: TradingRecord):
     logger.log(f'-- {record.name} Statistics --')
     exchange_rate = sliding_window.current_exchange_rate(record.exchange_rates)
     logger.log(f'Exchange Rate: {exchange_rate}')
+    exchange_rate_filtered = sliding_window.current_exchange_rate_filtered(record.exchange_rates)
+    logger.log(f'Filtered Exchange Rate: {exchange_rate_filtered}')
     logger.log(f'USD: {record.usd}')
     logger.log(f'Cryptocurrency: {record.crypto}')
     logger.log(f'Buys: {record.buys}')

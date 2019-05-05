@@ -26,6 +26,9 @@ export interface Transaction {
 // TODO: rename this to ExchangeRateSample
 export interface SlidingWindowSample {
     exchange_rate: number;
+    exchange_rate_filtered: number;
+    exchange_rate_moving_average_10: number;
+    exchange_rate_moving_average_100: number;
     epoch: number;
 }
 
@@ -44,9 +47,9 @@ export interface TradingRecord {
     buys: number;
     sells: number;
     holds: number;
-    exchange_rates: any;
+    exchange_rates: SlidingWindow;
     fees_paid: number;
-    pending_sales: any[];
+    pending_sales: Transaction[];
     transaction_window: Transaction[];
 }
 
