@@ -107,6 +107,7 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
                     pointHoverBorderWidth: 2,
                     pointRadius: 0,
                     pointHitRadius: 10,
+                    steppedLine: true,
                     data: []
                 },
                 {
@@ -144,6 +145,7 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
                     pointHoverBorderWidth: 2,
                     pointRadius: 0,
                     pointHitRadius: 10,
+                    steppedLine: true,
                     data: []
                 },
                 {
@@ -165,6 +167,7 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
                     pointHoverBorderWidth: 2,
                     pointRadius: 0,
                     pointHitRadius: 10,
+                    steppedLine: true,
                     data: []
                 },
                 {
@@ -186,6 +189,7 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
                     pointHoverBorderWidth: 2,
                     pointRadius: 0,
                     pointHitRadius: 10,
+                    steppedLine: true,
                     data: []
                 }
             ]
