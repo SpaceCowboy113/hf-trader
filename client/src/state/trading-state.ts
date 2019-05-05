@@ -47,9 +47,9 @@ export interface TradingRecord {
     buys: number;
     sells: number;
     holds: number;
-    exchange_rates: any;
+    exchange_rates: SlidingWindow;
     fees_paid: number;
-    pending_sales: any[];
+    pending_sales: Transaction[];
     transaction_window: Transaction[];
 }
 
