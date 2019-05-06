@@ -1,6 +1,7 @@
 import csv
 from typing import List, Tuple  # noqa: F401
 
+import zulu_time
 from pyrsistent import PRecord, PVector, field, pvector
 
 
@@ -20,7 +21,7 @@ class Transaction(PRecord):
     label = field(type=str, mandatory=True)
     quantity = field(type=float, mandatory=False)
     exchange_rate = field(type=float, mandatory=False)
-    timestamp = field(type=str, mandatory=False)
+    epoch = field(type=float, mandatory=False)
     fees = field(type=float, mandatory=False)
     order = field(type=str, invariant=valid_order_types, mandatory=True)
 
@@ -54,11 +55,11 @@ def record_paired_transaction(  # TODO: Renamed to record_transaction_pair
             paired_transactions.sell.label,
             paired_transactions.buy.quantity,
             paired_transactions.buy.exchange_rate,
-            paired_transactions.buy.timestamp,
+            zulu_time.get_timestamp(paired_transactions.buy.epoch),
             paired_transactions.buy.fees,
             paired_transactions.sell.quantity,
             paired_transactions.sell.exchange_rate,
-            paired_transactions.sell.timestamp,
+            zulu_time.get_timestamp(paired_transactions.sell.epoch),
             paired_transactions.sell.fees,
             calculate_capital_gains(paired_transactions)
         ])
@@ -74,14 +75,14 @@ def open_transaction_history(path: str) -> PVector:
                     label=row[0],
                     quantity=float(row[1]),
                     exchange_rate=float(row[2]),
-                    timestamp=row[3],
+                    epoch=zulu_time.get_epoch(row[3]),
                     fees=float(row[4]),
                 ),
                 sell=Transaction(
                     label=row[0],
                     quantity=float(row[5]),
                     exchange_rate=float(row[6]),
-                    timestamp=row[7],
+                    epoch=zulu_time.get_epoch(row[7]),
                     fees=float(row[8])
                 )
             )

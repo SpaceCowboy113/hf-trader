@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Tuple
 
 import sliding_window
@@ -85,7 +84,7 @@ def buy_crypto(quantity: float, record: TradingRecord) -> Result[TradingRecord]:
         label='BTC-USD',
         quantity=float(quantity),
         exchange_rate=float(exchange_rate),
-        timestamp=get_timestamp(epoch),
+        epoch=epoch,
         fees=float(fee),
         order='buy',
     )
@@ -126,7 +125,7 @@ def sell_crypto(quantity: float, record: TradingRecord) -> Result[TradingRecord]
         label='BTC-USD',
         quantity=float(quantity),
         exchange_rate=float(exchange_rate),
-        timestamp=get_timestamp(epoch),
+        epoch=epoch,
         fees=float(fee),
         order='sell',
     )
@@ -167,7 +166,7 @@ def hold_crypto(record: TradingRecord) -> Result[TradingRecord]:
         label='BTC-USD',
         quantity=0.0,
         exchange_rate=float(exchange_rate),
-        timestamp=get_timestamp(epoch),
+        epoch=epoch,
         fees=0.0,
         order='hold',
     )
@@ -178,19 +177,6 @@ def hold_crypto(record: TradingRecord) -> Result[TradingRecord]:
         'holds': record.holds + 1,
         'transaction_window': transaction_window,
     })
-
-
-def get_epoch(zulu_date: str) -> float:
-    ''' Returns epoch (as a float in seconds) from zulu formatted date string
-    (zulu date strings are given by coinbase)
-    TODO: move into a time management file along with trading_record.get_timestamp
-    '''
-
-    return datetime.strptime(zulu_date, '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
-
-
-def get_timestamp(epoch: float) -> str:
-    return datetime.fromtimestamp(epoch).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
 
 # TODO: Check that sequence number is incremented with each message received
@@ -207,11 +193,6 @@ def update_exchange_rate(
     return record.update({
         'exchange_rates': exchange_rates,
     })
-    # return (
-    #     pipe
-    #     | (sliding_window.add, sliding_window_sample)
-    #     | (record.set, 'exchange_rates')
-    # )(record.exchange_rates)
 
 
 def place_order(action: TradingAction, record: TradingRecord) -> Result[TradingRecord]:
