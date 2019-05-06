@@ -220,12 +220,20 @@ def statistics(record: TradingRecord):
     logger.log(f'Moving Average: {moving_average}')
     derivative = sliding_window.derivative(100, record.exchange_rates)
     logger.log(f'Rate of Change: {derivative}')
+    logger.log(f'Net Worth: {calculate_net_worth(record)}')
+    logger.log(f'Profit: {calculate_profit(record)}')
+
+
+def calculate_net_worth(record: TradingRecord) -> float:
     exchange_rate = get_exchange_rate(record)
     if exchange_rate is not None:
-        net_worth = record.usd + record.crypto * exchange_rate
-        profit = net_worth - record.initial_usd
-        logger.log(f'Net Worth: {net_worth}')
-        logger.log(f'Profit: {profit}')
+        return record.usd + record.crypto * exchange_rate
+    return record.initial_usd
+
+
+def calculate_profit(record: TradingRecord) -> float:
+    net_worth = calculate_net_worth(record)
+    return net_worth - record.initial_usd
 
 
 def get_exchange_rate(record: TradingRecord) -> Maybe[float]:
