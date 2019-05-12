@@ -39,8 +39,7 @@ def construct(
         results=[],
         first_order_filter_time_constant=first_order_filter_time_constant,
         second_order_filter_time_constant=second_order_filter_time_constant,
-        filter_order_ratio=filter_order_ratio
-    )
+        filter_order_ratio=filter_order_ratio)
 
 
 def filter(

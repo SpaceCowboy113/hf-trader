@@ -84,19 +84,19 @@ def derivative(n: int, samples: PVector) -> float:
         return 0.0
     sliced_samples = time_slice(n, samples)
     epoch_average = 0.0
-    value_average = 0.0
+    exchange_rate_average = 0.0
     for sample in sliced_samples:
         epoch_average += sample.epoch
-        value_average += sample.exchange_rate
+        exchange_rate_average += sample.exchange_rate
     epoch_average /= len(sliced_samples)
-    value_average /= len(sliced_samples)
+    exchange_rate_average /= len(sliced_samples)
 
     # See https://www.varsitytutors.com/hotmath/hotmath_help/topics/line-of-best-fit
     numerator = 0.0
     denom = 0.0
     for sample in sliced_samples:
         epoch_error = sample.epoch - epoch_average
-        exchange_rate_error = sample.exchange_rate - value_average
+        exchange_rate_error = sample.exchange_rate - exchange_rate_average
         numerator += epoch_error * exchange_rate_error
         denom += epoch_error * epoch_error
 
