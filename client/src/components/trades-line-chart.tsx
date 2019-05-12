@@ -190,6 +190,7 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
 
         const datasets = [exchangeRateLine, pointLine];
 
+        // Push a line for each subroutine executing in the trading record
         Object.keys(tradingRecord.exchange_rates.subroutines).forEach((name, index) => {
             const subroutine = tradingRecord.exchange_rates.subroutines[name];
             if (subroutine != null) {

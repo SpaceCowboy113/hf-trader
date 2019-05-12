@@ -1,25 +1,25 @@
-import operator
-from functools import reduce
-
-from pipetools import X, pipe
 from pyrsistent import PVector, field
 
 from invariants import must_be_positive
 from maybe import Maybe
-from sliding_window import Subroutine, SubroutineResult, time_slice
+from sliding_window import SlidingWindowSample, Subroutine, SubroutineResult, average
 
 
 class MovingAverageSubroutine(Subroutine):
     # The number of exchange rate samples that are averaged into each sliding window sample.
     n = field(type=int, mandatory=True, invariant=must_be_positive)
 
-    def evaluate(self, samples: PVector) -> Maybe[SubroutineResult]:
-        if len(samples) < 1:
+    def evaluate(
+        self,
+        prev_samples: PVector,
+        new_sample: SlidingWindowSample
+    ) -> Maybe[SubroutineResult]:
+        if new_sample is None:
             return None
         else:
             return SubroutineResult(
-                value=average(self.n, samples),
-                epoch=samples[-1].epoch
+                value=next_moving_average(self.n, prev_samples, new_sample),
+                epoch=new_sample.epoch
             )
         
 
@@ -30,10 +30,10 @@ def construct(n: int) -> Subroutine:
     )
 
     
-def average(n: int, samples: PVector) -> float:
-    sliced_samples = time_slice(n, samples)
-    length = len(sliced_samples)
-    if length != 0:
-        sum = sliced_samples > pipe | (map, ~X.exchange_rate) | (reduce, operator.add)
-        return sum / length
-    return 0.0
+def next_moving_average(
+    n: int,
+    prev_samples: PVector,
+    new_sample: SlidingWindowSample
+) -> float:
+    all_samples = prev_samples.append(new_sample)
+    return average(n, all_samples)

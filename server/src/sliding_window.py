@@ -8,6 +8,11 @@ from pipetools import X, pipe
 from pyrsistent import PRecord, PVector, field, pvector_field, pmap_field, PMap, m
 
 
+class SlidingWindowSample(PRecord):
+    exchange_rate = field(type=float, mandatory=True)
+    epoch = field(type=float, mandatory=True)
+
+
 class SubroutineResult(PRecord):
     value = field(type=float, mandatory=True)
     epoch = field(type=float, mandatory=True)
@@ -17,13 +22,12 @@ class SubroutineResult(PRecord):
 class Subroutine(PRecord):
     results = pvector_field(SubroutineResult)
 
-    def evaluate(self, samples: PVector) -> Maybe[SubroutineResult]:
+    def evaluate(
+        self,
+        prev_samples: PVector,
+        new_sample: SlidingWindowSample
+    ) -> Maybe[SubroutineResult]:
         ...
-
-
-class SlidingWindowSample(PRecord):
-    exchange_rate = field(type=float, mandatory=True)
-    epoch = field(type=float, mandatory=True)
 
 
 class SlidingWindow(PRecord):
@@ -44,27 +48,29 @@ def construct(
 
 
 def add(sample: SlidingWindowSample, window: SlidingWindow) -> SlidingWindow:
-    # Pop oldest sample to keep length of samples less than maximum size
-    if len(window.samples) >= window.maximum_size:
-        updated_window = window.update({'samples': window.samples.append(sample)[1:]})
-    else:
-        updated_window = window.update({'samples': window.samples.append(sample)})
-
+    updated_subroutines = window.subroutines
     for name, subroutine in window.subroutines.items():
-        result = subroutine.evaluate(updated_window.samples)
+        result = subroutine.evaluate(window.samples, sample)
         if result is None:
             continue
         if len(subroutine.results) >= window.maximum_size:
-            updated_subroutine = subroutine.update({'results': subroutine.results.append(result)[1:]})
+            updated_subroutine = subroutine.update(
+                {'results': subroutine.results.append(result)[1:]})
         else:
             updated_subroutine = subroutine.update({'results': subroutine.results.append(result)})
-        updated_subroutines = updated_window.subroutines.update({name: updated_subroutine})
-        updated_window = updated_window.update({'subroutines': updated_subroutines})
-    return updated_window
+        updated_subroutines = updated_subroutines.update({name: updated_subroutine})
+    
+    # Pop oldest sample to keep length of samples less than maximum size
+    if len(window.samples) >= window.maximum_size:
+        return window.update(
+            {'samples': window.samples.append(sample)[1:], 'subroutines': updated_subroutines})
+    else:
+        return window.update(
+            {'samples': window.samples.append(sample), 'subroutines': updated_subroutines})
 
 
-def average(n: int, window: SlidingWindow) -> float:
-    sliced_samples = time_slice(n, window.samples)
+def average(n: int, samples: PVector) -> float:
+    sliced_samples = time_slice(n, samples)
     length = len(sliced_samples)
     if length != 0:
         sum = sliced_samples > pipe | (map, ~X.exchange_rate) | (reduce, operator.add)
@@ -72,10 +78,10 @@ def average(n: int, window: SlidingWindow) -> float:
     return 0.0
 
 
-def derivative(n: int, window: SlidingWindow) -> float:
-    if n < 2 or len(window.samples) < n:
+def derivative(n: int, samples: PVector) -> float:
+    if n < 2 or len(samples) < n:
         return 0.0
-    sliced_samples = time_slice(n, window.samples)
+    sliced_samples = time_slice(n, samples)
     epoch_average = 0.0
     value_average = 0.0
     for sample in sliced_samples:

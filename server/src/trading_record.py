@@ -222,9 +222,9 @@ def statistics(record: TradingRecord):
     logger.log(f'Holds: {record.holds}')
     logger.log(f'Pending Sales: {len(record.pending_sales)}')
     logger.log(f'Fees Paid: {record.fees_paid}')
-    moving_average = sliding_window.average(100, record.exchange_rates)
+    moving_average = sliding_window.average(100, record.exchange_rates.samples)
     logger.log(f'Moving Average: {moving_average}')
-    derivative = sliding_window.derivative(100, record.exchange_rates)
+    derivative = sliding_window.derivative(100, record.exchange_rates.samples)
     logger.log(f'Rate of Change: {derivative}')
     exchange_rate = get_exchange_rate(record)
     if exchange_rate is not None:
@@ -239,8 +239,8 @@ def get_exchange_rate(record: TradingRecord) -> Maybe[float]:
 
 
 def get_rate_of_change(record: TradingRecord) -> Maybe[float]:
-    return sliding_window.derivative(100, record.exchange_rates)
+    return sliding_window.derivative(100, record.exchange_rates.samples)
 
 
 def get_moving_average(record: TradingRecord) -> Maybe[float]:
-    return sliding_window.average(100, record.exchange_rates)
+    return sliding_window.average(100, record.exchange_rates.samples)

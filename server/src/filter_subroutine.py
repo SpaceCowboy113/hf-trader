@@ -2,7 +2,7 @@ from pyrsistent import PVector, field, pmap
 
 from invariants import must_be_positive, must_be_zero_to_one
 from maybe import Maybe
-from sliding_window import Subroutine, SubroutineResult
+from sliding_window import SlidingWindowSample, Subroutine, SubroutineResult
 
 
 class FilterSubroutine(Subroutine):
@@ -19,17 +19,22 @@ class FilterSubroutine(Subroutine):
     # order filter and (3/4) of the response comes from the second order filter.
     filter_order_ratio = field(type=float, mandatory=True, invariant=must_be_zero_to_one)
 
-    def evaluate(self, samples: PVector) -> Maybe[SubroutineResult]:
-        if len(samples) < 1:
+    def evaluate(
+        self,
+        prev_samples: PVector,
+        new_sample: SlidingWindowSample
+    ) -> Maybe[SubroutineResult]:
+        if new_sample is None:
             return None
         else:
-            return filter(samples, self)
+            return filter(prev_samples, new_sample, self)
         
 
 def construct(
-        first_order_filter_time_constant: float = 1.0,
-        second_order_filter_time_constant: float = 0.1,
-        filter_order_ratio: float = 0.33) -> Subroutine:
+    first_order_filter_time_constant: float = 1.0,
+    second_order_filter_time_constant: float = 0.1,
+    filter_order_ratio: float = 0.33
+) -> Subroutine:
     return FilterSubroutine(
         results=[],
         first_order_filter_time_constant=first_order_filter_time_constant,
@@ -38,32 +43,32 @@ def construct(
     )
 
 
-def filter(samples: PVector, filter: FilterSubroutine) -> Maybe[SubroutineResult]:
-    length = len(samples)
-    if length == 0:
-        return None
-
+def filter(
+    prev_samples: PVector,
+    new_sample: SlidingWindowSample, 
+    filter: FilterSubroutine
+) -> Maybe[SubroutineResult]:
+    length = len(prev_samples)
     exchange_rate_filtered = 0.0
     exchange_rate_rate_of_change_filtered = 0.0
-    sample = samples[-1]
-    if length == 1:
+    if length == 0:
         exchange_rate_rate_of_change_filtered = 0.0
-        exchange_rate_filtered = sample.exchange_rate
-    elif length == 2:
-        t = sample.epoch - samples[0].epoch
+        exchange_rate_filtered = new_sample.exchange_rate
+    elif length == 1:
+        t = new_sample.epoch - prev_samples[0].epoch
         if t > 0:
-            diff = sample.exchange_rate - samples[0].exchange_rate
+            diff = new_sample.exchange_rate - prev_samples[0].exchange_rate
             exchange_rate_rate_of_change_filtered = diff/t
         else:
             exchange_rate_rate_of_change_filtered = 0.0
 
-        exchange_rate_filtered = sample.exchange_rate
+        exchange_rate_filtered = new_sample.exchange_rate
     else:
         prev_result = filter.results[-1]
         prev_rate_of_change = prev_result.data['exchange_rate_rate_of_change_filtered']
-        t = sample.epoch - samples[-2].epoch
+        t = new_sample.epoch - prev_samples[-1].epoch
         if t > 0:
-            diff = sample.exchange_rate - samples[-2].exchange_rate
+            diff = new_sample.exchange_rate - prev_samples[-1].exchange_rate
             rate_of_change = diff/t
             exchange_rate_rate_of_change_filtered = (
                 prev_rate_of_change +
@@ -76,11 +81,11 @@ def filter(samples: PVector, filter: FilterSubroutine) -> Maybe[SubroutineResult
         prev_val = prev_result.value
         exchange_rate_filtered = (
             prev_val +
-            filter.filter_order_ratio * (sample.exchange_rate - prev_val) *
+            filter.filter_order_ratio * (new_sample.exchange_rate - prev_val) *
             min(1, t * filter.first_order_filter_time_constant) +
             (1 - filter.filter_order_ratio) * prev_rate_of_change * t
         )
     return SubroutineResult(
         value=exchange_rate_filtered,
-        epoch=sample.epoch,
+        epoch=new_sample.epoch,
         data=pmap({'exchange_rate_rate_of_change_filtered': exchange_rate_rate_of_change_filtered}))
