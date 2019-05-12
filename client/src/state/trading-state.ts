@@ -23,12 +23,18 @@ export interface Transaction {
     order: Order;
 }
 
+export interface SubroutineResult {
+    value: number;
+    epoch: number;
+}
+
+export interface Subroutine {
+    results: SubroutineResult[];
+}
+
 // TODO: rename this to ExchangeRateSample
 export interface SlidingWindowSample {
     exchange_rate: number;
-    exchange_rate_filtered: number;
-    exchange_rate_moving_average_10: number;
-    exchange_rate_moving_average_100: number;
     epoch: number;
 }
 
@@ -36,6 +42,8 @@ export interface SlidingWindowSample {
 export interface SlidingWindow {
     samples: SlidingWindowSample[];
     maximum_size: number;
+    // TODO: Convert to Map<string, Subroutine>
+    subroutines: Object;
 }
 
 export interface TradingRecord {

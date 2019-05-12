@@ -2,117 +2,65 @@ import operator
 from functools import reduce
 from typing import Union
 
-from invariants import must_be_positive, must_be_zero_to_one
+from invariants import must_be_positive
+from maybe import Maybe
 from pipetools import X, pipe
-from pyrsistent import PRecord, PVector, field, pvector_field
+from pyrsistent import PRecord, PVector, field, pvector_field, pmap_field, PMap, m
+
+
+class SubroutineResult(PRecord):
+    value = field(type=float, mandatory=True)
+    epoch = field(type=float, mandatory=True)
+    data = pmap_field(str, float)
+
+
+class Subroutine(PRecord):
+    results = pvector_field(SubroutineResult)
+
+    def evaluate(self, samples: PVector) -> Maybe[SubroutineResult]:
+        ...
 
 
 class SlidingWindowSample(PRecord):
     exchange_rate = field(type=float, mandatory=True)
-    exchange_rate_filtered = field(type=float, mandatory=False)
-    exchange_rate_rate_of_change_filtered = field(type=float, mandatory=False)
-    exchange_rate_moving_average_10 = field(type=float, mandatory=False)
-    exchange_rate_moving_average_100 = field(type=float, mandatory=False)
     epoch = field(type=float, mandatory=True)
 
 
 class SlidingWindow(PRecord):
     samples = pvector_field(SlidingWindowSample)
     maximum_size = field(type=int, mandatory=True, invariant=must_be_positive)
-    # Pararmeterizes the response of the first-order filter. Larger values make
-    # the filter more responsive but preserve more noise in the signal.
-    first_order_filter_time_constant = field(
-        type=float, mandatory=True, invariant=must_be_positive)
-    # Pararmeterizes the response of the second-order filter. Larger values make
-    # the filter more responsive but preserve more noise in the signal.
-    second_order_filter_time_constant = field(
-        type=float, mandatory=True, invariant=must_be_positive)
-    # The ratio of contributions between the first and second order filters. A
-    # value of 0.25 means that (1/4) of the filter response comes from the first
-    # order filter and (3/4) of the response comes from the second order filter.
-    filter_order_ratio = field(type=float, mandatory=True,
-                               invariant=must_be_zero_to_one)
+    subroutines = pmap_field(str, Subroutine)
 
 
 def construct(
     maximum_size: int = 1,
-    first_order_filter_time_constant: float = 1.0,
-    second_order_filter_time_constant: float = 0.1,
-    filter_order_ratio: float = 0.33
+    subroutines: PMap = m()
 ) -> SlidingWindow:
     return SlidingWindow(
         samples=[],
         maximum_size=maximum_size,
-        first_order_filter_time_constant=first_order_filter_time_constant,
-        second_order_filter_time_constant=second_order_filter_time_constant,
-        filter_order_ratio=filter_order_ratio
+        subroutines=subroutines
     )
 
 
-def next_moving_average(
-    n: int,
-    window: SlidingWindow,
-    next_sample: SlidingWindowSample,
-) -> float:
-    last_moving_average = average(n, window)
-    last_window_length = len(time_slice(n, window.samples))
-    sum = last_moving_average * last_window_length + next_sample.exchange_rate
-    return sum / (last_window_length + 1)
-
-
 def add(sample: SlidingWindowSample, window: SlidingWindow) -> SlidingWindow:
-    updated_sample = filter_sample(sample, window).update({
-        'exchange_rate_moving_average_10': next_moving_average(10, window, sample),
-        'exchange_rate_moving_average_100': next_moving_average(100, window, sample),
-    })
-
     # Pop oldest sample to keep length of samples less than maximum size
     if len(window.samples) >= window.maximum_size:
-        return window.update({'samples': window.samples.append(updated_sample)[1:]})
-    return window.update({'samples': window.samples.append(updated_sample)})
-
-
-def filter_sample(sample: SlidingWindowSample, window: SlidingWindow) -> SlidingWindowSample:
-    length = len(window.samples)
-    exchange_rate_filtered = 0.0
-    exchange_rate_rate_of_change_filtered = 0.0
-    if length == 0:
-        exchange_rate_rate_of_change_filtered = 0.0
-        exchange_rate_filtered = sample.exchange_rate
-    elif length == 1:
-        t = sample.epoch - window.samples[0].epoch
-        if t > 0:
-            diff = sample.exchange_rate - window.samples[0].exchange_rate
-            exchange_rate_rate_of_change_filtered = diff/t
-        else:
-            exchange_rate_rate_of_change_filtered = 0.0
-
-        exchange_rate_filtered = sample.exchange_rate
+        updated_window = window.update({'samples': window.samples.append(sample)[1:]})
     else:
-        prev_rate_of_change = window.samples[-1].exchange_rate_rate_of_change_filtered
-        t = sample.epoch - window.samples[-1].epoch
-        if t > 0:
-            diff = sample.exchange_rate - window.samples[-1].exchange_rate
-            rate_of_change = diff/t
-            exchange_rate_rate_of_change_filtered = (
-                prev_rate_of_change +
-                (rate_of_change - prev_rate_of_change) *
-                min(1, t * window.second_order_filter_time_constant)
-            )
-        else:
-            exchange_rate_rate_of_change_filtered = prev_rate_of_change
+        updated_window = window.update({'samples': window.samples.append(sample)})
 
-        prev_val = window.samples[-1].exchange_rate_filtered
-        exchange_rate_filtered = (
-            prev_val +
-            window.filter_order_ratio * (sample.exchange_rate - prev_val) *
-            min(1, t * window.first_order_filter_time_constant) +
-            (1 - window.filter_order_ratio) * prev_rate_of_change * t
-        )
-    return sample.update({
-        'exchange_rate_filtered': exchange_rate_filtered,
-        'exchange_rate_rate_of_change_filtered': exchange_rate_rate_of_change_filtered
-    })
+    for name, subroutine in window.subroutines.items():
+        result = subroutine.evaluate(updated_window.samples)
+        if result is None:
+            continue
+        if len(subroutine.results) >= window.maximum_size:
+            updated_subroutine = subroutine.update({'results': subroutine.results.append(result)[1:]})
+        else:
+            updated_subroutine = subroutine.update({'results': subroutine.results.append(result)})
+        updated_subroutines = updated_window.subroutines.update({name: updated_subroutine})
+        updated_window = updated_window.update({'subroutines': updated_subroutines})
+    return updated_window
 
 
 def average(n: int, window: SlidingWindow) -> float:
@@ -129,19 +77,19 @@ def derivative(n: int, window: SlidingWindow) -> float:
         return 0.0
     sliced_samples = time_slice(n, window.samples)
     epoch_average = 0.0
-    exchange_rate_average = 0.0
+    value_average = 0.0
     for sample in sliced_samples:
-        epoch_average += sample['epoch']
-        exchange_rate_average += sample['exchange_rate']
+        epoch_average += sample.epoch
+        value_average += sample.exchange_rate
     epoch_average /= len(sliced_samples)
-    exchange_rate_average /= len(sliced_samples)
+    value_average /= len(sliced_samples)
 
     # See https://www.varsitytutors.com/hotmath/hotmath_help/topics/line-of-best-fit
     numerator = 0.0
     denom = 0.0
     for sample in sliced_samples:
-        epoch_error = sample['epoch'] - epoch_average
-        exchange_rate_error = sample['exchange_rate'] - exchange_rate_average
+        epoch_error = sample.epoch - epoch_average
+        exchange_rate_error = sample.exchange_rate - value_average
         numerator += epoch_error * exchange_rate_error
         denom += epoch_error * epoch_error
 
@@ -159,12 +107,6 @@ def current_exchange_rate(window: SlidingWindow) -> Union[float, None]:
     if len(window.samples) == 0:
         return None
     return window.samples[-1].exchange_rate
-
-
-def current_exchange_rate_filtered(window: SlidingWindow) -> Union[float, None]:
-    if len(window.samples) == 0:
-        return None
-    return window.samples[-1].exchange_rate_filtered
 
 
 def current_epoch(window: SlidingWindow) -> Union[float, None]:
