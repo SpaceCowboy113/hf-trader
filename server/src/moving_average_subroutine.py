@@ -14,13 +14,11 @@ class MovingAverageSubroutine(Subroutine):
         prev_samples: PVector,
         new_sample: SlidingWindowSample
     ) -> Maybe[SubroutineResult]:
-        if new_sample is None:
-            return None
-        else:
+        if new_sample is not None:
             return SubroutineResult(
                 value=next_moving_average(self.n, prev_samples, new_sample),
-                epoch=new_sample.epoch
-            )
+                epoch=new_sample.epoch)
+        return None
         
 
 def construct(n: int) -> Subroutine:
