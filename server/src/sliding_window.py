@@ -14,10 +14,9 @@ class SlidingWindowSample(PRecord):
 
 
 class SubroutineResult(PRecord):
-    value = field(type=float, mandatory=True)
-    epoch = field(type=float, mandatory=True)
     # TODO: Allow any value types.
-    data = pmap_field(str, float, optional=True)
+    data = pmap_field(str, float)
+    epoch = field(type=float, mandatory=True)
 
 
 class Subroutine(PRecord):

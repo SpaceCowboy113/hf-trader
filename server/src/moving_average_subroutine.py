@@ -1,4 +1,4 @@
-from pyrsistent import PVector, field
+from pyrsistent import PVector, field, pmap
 
 from invariants import must_be_positive
 from maybe import Maybe
@@ -16,10 +16,10 @@ class MovingAverageSubroutine(Subroutine):
     ) -> Maybe[SubroutineResult]:
         if new_sample is not None:
             return SubroutineResult(
-                value=next_moving_average(self.n, prev_samples, new_sample),
+                data=pmap({'value': next_moving_average(self.n, prev_samples, new_sample)}),
                 epoch=new_sample.epoch)
         return None
-        
+
 
 def construct(n: int) -> Subroutine:
     return MovingAverageSubroutine(
@@ -27,7 +27,7 @@ def construct(n: int) -> Subroutine:
         n=n
     )
 
-    
+
 def next_moving_average(
     n: int,
     prev_samples: PVector,

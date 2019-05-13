@@ -24,7 +24,8 @@ export interface Transaction {
 }
 
 export interface SubroutineResult {
-    value: number;
+    // TODO: Convert to Map<string, any>
+    data: Object;
     epoch: number;
 }
 

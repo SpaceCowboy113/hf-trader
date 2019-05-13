@@ -214,7 +214,7 @@ def statistics(record: TradingRecord):
     for name, subroutine in record.exchange_rates.subroutines.items():
         if len(subroutine.results) < 1:
             continue
-        logger.log(f'{name}: {subroutine.results[-1].value}')
+        logger.log(f'{name}: {subroutine.results[-1].data["value"]}')
     logger.log(f'USD: {record.usd}')
     logger.log(f'Cryptocurrency: {record.crypto}')
     logger.log(f'Buys: {record.buys}')

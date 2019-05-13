@@ -77,7 +77,7 @@ def filter(
         else:
             exchange_rate_rate_of_change_filtered = prev_rate_of_change
 
-        prev_val = prev_result.value
+        prev_val = prev_result.data['value']
         exchange_rate_filtered = (
             prev_val +
             filter.filter_order_ratio * (new_sample.exchange_rate - prev_val) *
@@ -85,6 +85,7 @@ def filter(
             (1 - filter.filter_order_ratio) * prev_rate_of_change * t
         )
     return SubroutineResult(
-        value=exchange_rate_filtered,
-        epoch=new_sample.epoch,
-        data=pmap({'exchange_rate_rate_of_change_filtered': exchange_rate_rate_of_change_filtered}))
+        data=pmap({
+            'exchange_rate_rate_of_change_filtered': exchange_rate_rate_of_change_filtered,
+            'value': exchange_rate_filtered}),
+        epoch=new_sample.epoch)

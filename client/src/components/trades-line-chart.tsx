@@ -197,7 +197,12 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
                 const values: number[] = [];
 
                 subroutine.results.forEach((result, index) => {
-                    values.push(result.value);
+                    if ('value' in result.data) {
+                        values.push(result.data.value);
+                    } else {
+                        values.push(0);
+                        console.log(`Error: ${result} doesn't contain a value to plot.`)
+                    }
                 });
     
                 const rgb = getSubroutineRGB(name);
