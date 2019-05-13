@@ -2,7 +2,7 @@
 import React, { Component } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Maybe } from '../functional/maybe';
-import { Order, TradingRecord, TradingRecordRegistry, Transaction } from '../state/trading-state';
+import { Order, TradingRecord, TradingRecordRegistry, Transaction, Subroutine, SubroutineResult } from '../state/trading-state';
 
 
 function getPointBorderColor(order: Order): Maybe<string> {
@@ -20,6 +20,20 @@ function getPointBackgroundColor(order: Order): Maybe<string> {
             return 'rgba(192,75,75,1)';
         case 'sell':
             return 'rgba(75,192,75,1)';
+    }
+}
+
+function getSubroutineRGB(name: string): string {
+    switch(name) {
+        case 'moving_average_10':
+            return '237,174,73';
+        case 'moving_average_100':
+            return '209,73,91';
+        case 'filtered':
+            return '95,75,182';
+        default:
+            // TODO: Randomly generate
+            return '150,150,150';
     }
 }
 
@@ -89,7 +103,7 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
             labels: [],
             datasets: [
                 {
-                    label: "Exchange Rate",
+                    label: 'Exchange Rate',
                     fill: false,
                     lineTension: 0.1,
                     backgroundColor: 'rgba(75,192,192,0.8)',
@@ -112,7 +126,7 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
                 },
                 {
                     data: [],
-                    label: "Transactions",
+                    label: 'Transactions',
                     fill: false,
                     backgroundColor: 'rgba(0,0,0,0)',
                     borderColor: 'rgba(0,0,0,0)',
@@ -125,72 +139,6 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
                     pointHoverBorderWidth: 2,
                     pointRadius: [],
                     pointHitRadius: []
-                },
-                {
-                    label: "Filtered",
-                    fill: false,
-                    lineTension: 0.1,
-                    backgroundColor: 'rgba(95,75,182,0.8)',
-                    borderColor: 'rgba(95,75,182,0.95)',
-                    borderCapStyle: 'butt',
-                    borderDash: [],
-                    borderDashOffset: 0.0,
-                    borderJoinStyle: 'miter',
-                    pointBorderColor: 'rgba(95,75,182,1)',
-                    pointBackgroundColor: '#fff',
-                    pointBorderWidth: 1,
-                    pointHoverRadius: 5,
-                    pointHoverBackgroundColor: 'rgba(95,75,182,1)',
-                    pointHoverBorderColor: 'rgba(220,220,220,1)',
-                    pointHoverBorderWidth: 2,
-                    pointRadius: 0,
-                    pointHitRadius: 10,
-                    steppedLine: true,
-                    data: []
-                },
-                {
-                    label: "Moving Average (10)",
-                    fill: false,
-                    lineTension: 0.1,
-                    backgroundColor: 'rgba(237,174,73,0.8)',
-                    borderColor: 'rgba(237,174,73,0.95)',
-                    borderCapStyle: 'butt',
-                    borderDash: [],
-                    borderDashOffset: 0.0,
-                    borderJoinStyle: 'miter',
-                    pointBorderColor: 'rgba(237,174,73,1)',
-                    pointBackgroundColor: '#fff',
-                    pointBorderWidth: 1,
-                    pointHoverRadius: 5,
-                    pointHoverBackgroundColor: 'rgba(237,174,73,1)',
-                    pointHoverBorderColor: 'rgba(220,220,220,1)',
-                    pointHoverBorderWidth: 2,
-                    pointRadius: 0,
-                    pointHitRadius: 10,
-                    steppedLine: true,
-                    data: []
-                },
-                {
-                    label: "Moving Average (100)",
-                    fill: false,
-                    lineTension: 0.1,
-                    backgroundColor: 'rgba(209,73,91,0.8)',
-                    borderColor: 'rgba(209,73,91,0.95)',
-                    borderCapStyle: 'butt',
-                    borderDash: [],
-                    borderDashOffset: 0.0,
-                    borderJoinStyle: 'miter',
-                    pointBorderColor: 'rgba(209,73,91,1)',
-                    pointBackgroundColor: '#fff',
-                    pointBorderWidth: 1,
-                    pointHoverRadius: 5,
-                    pointHoverBackgroundColor: 'rgba(209,73,91,1)',
-                    pointHoverBorderColor: 'rgba(220,220,220,1)',
-                    pointHoverBorderWidth: 2,
-                    pointRadius: 0,
-                    pointHitRadius: 10,
-                    steppedLine: true,
-                    data: []
                 }
             ]
         };
@@ -204,10 +152,6 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
         // entire transaction window on push
         const labels: string[] = [];
         const exchangeRates: number[] = [];
-        const exchangeRatesFiltered: number[] = [];
-        const exchangeRateMovingAverages10: number[] = [];
-        const exchangeRateMovingAverages100: number[] = [];
-        const pointExchangeRates: any[] = [];
         const pointBorderColors: any[] = [];
         const pointBackgroundColors: any[] = [];
         const pointRadii: any[] = [];
@@ -216,23 +160,11 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
 
         tradingRecord.exchange_rates.samples.forEach((sample, index) => {
             const exchangeRate = sample.exchange_rate;
-            const exchangeRateFiltered = sample.exchange_rate_filtered;
-            const exchangeRateMovingAverage10 = sample.exchange_rate_moving_average_10
-            const exchangeRateMovingAverage100 = sample.exchange_rate_moving_average_100
 
             exchangeRates.push(exchangeRate);
-            exchangeRatesFiltered.push(exchangeRateFiltered);
-            exchangeRateMovingAverages10.push(exchangeRateMovingAverage10)
-            exchangeRateMovingAverages100.push(exchangeRateMovingAverage100)
         });
         const exchangeRateLine = this.state.datasets[0];
         exchangeRateLine.data = exchangeRates;
-        const exchangeRateFilteredLine = this.state.datasets[2];
-        exchangeRateFilteredLine.data = exchangeRatesFiltered;
-        const exchangeRateMovingAverage10Line = this.state.datasets[3];
-        exchangeRateMovingAverage10Line.data = exchangeRateMovingAverages10;
-        const exchangeRateMovingAverage100Line = this.state.datasets[4];
-        exchangeRateMovingAverage100Line.data = exchangeRateMovingAverages100;
 
         getTransactions(tradingRecord.transaction_window).forEach((transaction, index) => {
             const pointBorderColor = getPointBorderColor(transaction.order);
@@ -256,8 +188,49 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
         pointLine.pointHoverRadius = pointHoverRadii;
         pointLine.pointHitRadius = pointHitRadii;
 
-        const datasets = [exchangeRateLine, pointLine, exchangeRateFilteredLine,
-            exchangeRateMovingAverage10Line, exchangeRateMovingAverage100Line];
+        const datasets = [exchangeRateLine, pointLine];
+
+        // Push a line for each subroutine executing in the trading record
+        Object.keys(tradingRecord.exchange_rates.subroutines).forEach((name, index) => {
+            const subroutine = tradingRecord.exchange_rates.subroutines[name];
+            if (subroutine != null) {
+                const values: number[] = [];
+
+                subroutine.results.forEach((result, index) => {
+                    if ('value' in result.data) {
+                        values.push(result.data.value);
+                    } else {
+                        values.push(0);
+                        console.log(`Error: ${result} doesn't contain a value to plot.`)
+                    }
+                });
+    
+                const rgb = getSubroutineRGB(name);
+                const subroutineLine = {
+                    'label': name,
+                    'data': values,
+                    'backgroundColor': `rgb(${rgb}, 0.8)`,
+                    'borderColor': `rgb(${rgb}, 0.95)`,
+                    'pointBorderColor': `rgb(${rgb}, 1)`,
+                    'pointHoverBackgroundColor': `rgb(${rgb}, 1)`,
+                    'fill': false,
+                    'lineTension': 0.1,
+                    'borderCapStyle': 'butt',
+                    'borderDash': [],
+                    'borderDashOffset': 0.0,
+                    'borderJoinStyle': 'miter',
+                    'pointBackgroundColor': '#fff',
+                    'pointBorderWidth': 1,
+                    'pointHoverRadius': 5,
+                    'pointHoverBorderColor': 'rgba(220,220,220,1)',
+                    'pointHoverBorderWidth': 2,
+                    'pointRadius': 0,
+                    'pointHitRadius': 10,
+                    'steppedLine': true
+                }
+                datasets.push(subroutineLine);
+            }
+        });
 
         this.setState({
             labels,

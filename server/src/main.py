@@ -1,14 +1,19 @@
-import algorithmic_model
-import q_learning_model
-import tensorflow as tf
-import trading_record
-import web_application
-from coinbase_websocket_client import (CoinbaseWebsocketClient,  # noqa: F401
-                                       TradingModelRegistry,
-                                       TradingRecordRegistry)
-from logger import logger
 import signal
 import sys
+
+import tensorflow as tf
+from pyrsistent import m
+
+import algorithmic_model
+import moving_average_subroutine
+import filter_subroutine
+import q_learning_model
+import trading_record
+import web_application
+from coinbase_websocket_client import CoinbaseWebsocketClient  # noqa: F401
+from coinbase_websocket_client import (TradingModelRegistry,
+                                       TradingRecordRegistry)
+from logger import logger
 
 
 def close_hf_trader(sig, frame):
@@ -43,7 +48,10 @@ algorithmic_description = (
 trading_record_registry['algorithmic'] = trading_record.construct(
     'Algorithmic Trading Record',
     algorithmic_description,
-    100000.0
+    100000.0,
+    m(moving_average_10=moving_average_subroutine.construct(10),
+        moving_average_100=moving_average_subroutine.construct(100),
+        filtered=filter_subroutine.construct())
 )
 
 random_description = (
