@@ -10,7 +10,11 @@ export interface QLearningModel {
 
 }
 
-export type TradingModel = AlgorithmicModel | QLearningModel;
+export interface ExtremaFindingModel {
+
+}
+
+export type TradingModel = AlgorithmicModel | QLearningModel | ExtremaFindingModel;
 
 export type Order = 'buy' | 'sell' | 'hold';
 
@@ -90,6 +94,7 @@ export function calculateProfit(tradingRecord: TradingRecord): number {
 export interface Statistics {
     'algorithmic': TradingRecord;
     'q-learning': TradingRecord;
+    'extrema-finding': TradingRecord;
 }
 
 export type TradingStrategy = keyof Statistics;
@@ -114,6 +119,7 @@ export function longPollTradingInfo(
             }
             const algorithmicTradingRecord = result['algorithmic'];
             const qLearningTradingRecord = result['q-learning'];
+            const extremaFindingTradingRecord = result['extrema-finding'];
             tradingRecordRegistry.set(
                 'algorithmic',
                 algorithmicTradingRecord,
@@ -122,10 +128,15 @@ export function longPollTradingInfo(
                 'q-learning',
                 qLearningTradingRecord,
             );
+            tradingRecordRegistry.set(
+                'extrema-finding',
+                extremaFindingTradingRecord,
+            );
 
             // TODO: pull trading models from server and set here
             tradingModelRegistry.set('algorithmic', {});
             tradingModelRegistry.set('q-learning', {});
+            tradingModelRegistry.set('extrema-finding', {});
         }).then(() => longPollTradingInfo(
             tradingRecordRegistry,
             tradingModelRegistry,

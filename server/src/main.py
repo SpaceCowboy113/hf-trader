@@ -8,6 +8,7 @@ import algorithmic_model
 import moving_average_subroutine
 import filter_subroutine
 import q_learning_model
+import extrema_finding_model
 import trading_record
 import web_application
 from coinbase_websocket_client import CoinbaseWebsocketClient  # noqa: F401
@@ -23,6 +24,16 @@ def close_hf_trader(sig, frame):
 
 
 trading_record_registry: TradingRecordRegistry = {}
+
+extrema_finding_description = (
+    'Looks for peaks and valleys and makes buy/sell decisions on the \n'
+    'upswings and downswings respectively.'
+)
+trading_record_registry['extrema-finding'] = trading_record.construct(
+    'Extrema Finding Trading Record',
+    extrema_finding_description,
+    100000.0
+)
 
 q_learning_description = (
     'Uses reinforcement learning to make trading decisions.  Neural network is used \n'
@@ -68,6 +79,10 @@ session = tf.Session()
 trading_model_registry: TradingModelRegistry = {
     'q-learning': q_learning_model.construct(session),
     'algorithmic': algorithmic_model.construct(
+        selling_threshold=0.02,
+        cut_losses_threshold=-0.05
+    ),
+    'extrema-finding': extrema_finding_model.construct(
         selling_threshold=0.02,
         cut_losses_threshold=-0.05
     )

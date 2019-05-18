@@ -44,9 +44,11 @@ class Statistics(Resource):
         logger.log('/stats/GET')
         algorithmic_record = self.trading_record_registry['algorithmic']
         q_learning_record = self.trading_record_registry['q-learning']
+        extrema_finding_record = self.trading_record_registry['extrema-finding']
         return json.dumps({
             'algorithmic': algorithmic_record.serialize(),
             'q-learning': q_learning_record.serialize(),
+            'extrema-finding': extrema_finding_record.serialize()
         })
 
 
@@ -67,9 +69,11 @@ class Transactions(Resource):
         logger.log('/transactions/GET')
         algorithmic_record = self.trading_record_registry['algorithmic']
         q_learning_record = self.trading_record_registry['q-learning']
+        extrema_finding_record = self.trading_record_registry['extrema-finding']
         return json.dumps({
             'algorithmic': algorithmic_record.transaction_window.serialize(),
             'q-learning': q_learning_record.transaction_window.serialize(),
+            'extrema-finding': extrema_finding_record.serialize()
         })
 
 
