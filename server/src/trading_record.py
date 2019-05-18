@@ -38,7 +38,7 @@ def construct(
         name=name,
         description=description,
         initial_usd=initial_usd,
-        usd=100000.0,
+        usd=initial_usd,
         crypto=0.0,
         buys=0,
         sells=0,
@@ -97,7 +97,7 @@ def buy_crypto(quantity: float, record: TradingRecord) -> Result[TradingRecord]:
 
     return record.update({
         'usd': record.usd - buying_price - fee,
-        'crypto': record.crypto + 1,
+        'crypto': record.crypto + quantity,
         'buys': record.buys + 1,
         'fees_paid': record.fees_paid + fee,
         'pending_sales': record.pending_sales.append(buy_transaction),
@@ -145,7 +145,7 @@ def sell_crypto(quantity: float, record: TradingRecord) -> Result[TradingRecord]
 
     return record.update({
         'usd': record.usd + selling_price - fee,
-        'crypto': record.crypto - 1,
+        'crypto': record.crypto - quantity,
         'sells': record.sells + 1,
         'fees_paid': record.fees_paid + fee,
         'pending_sales': pending_sales,
