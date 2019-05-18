@@ -29,6 +29,10 @@ function getSubroutineRGB(name: string): string {
             return '237,174,73';
         case 'moving_average_100':
             return '209,73,91';
+        case 'little_moving_average':
+            return '237,174,73';
+        case 'big_moving_average':
+            return '209,73,91';
         case 'filtered':
             return '95,75,182';
         default:
@@ -169,7 +173,7 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
         getTransactions(tradingRecord.transaction_window).forEach((transaction, index) => {
             const pointBorderColor = getPointBorderColor(transaction.order);
             const pointBackgroundColor = getPointBackgroundColor(transaction.order);
-            const pointRadius = transaction.quantity * 5;
+            const pointRadius = Math.max(transaction.quantity * 5, 5);
             const pointHitRadius = pointRadius;
             const pointHoverRadius = pointRadius / 2;
 

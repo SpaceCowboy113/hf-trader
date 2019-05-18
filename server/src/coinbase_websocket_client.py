@@ -5,7 +5,7 @@ import algorithmic_model
 import cbpro
 import maybe
 import q_learning_model
-import extrema_finding_model
+import mac_algorithm_model
 import result
 import trading_record
 import zulu_time
@@ -137,21 +137,21 @@ class CoinbaseWebsocketClient(cbpro.WebsocketClient):
         trading_record.statistics(self.trading_record_registry['algorithmic'])
         algorithmic_model.statistics(self.trading_model_registry['algorithmic'])
 
-    def extrema_finding_trade(self, price_info: PriceInfo) -> None:
+    def mac_algorithm_trade(self, price_info: PriceInfo) -> None:
         record = trading_record.update_exchange_rate(
             price_info,
-            self.trading_record_registry['extrema-finding'])
-        action, self.trading_model_registry['extrema-finding'] = extrema_finding_model.predict(
+            self.trading_record_registry['mac-algorithm'])
+        action, self.trading_model_registry['mac-algorithm'] = mac_algorithm_model.predict(
             record,
-            self.trading_model_registry['extrema-finding'])
+            self.trading_model_registry['mac-algorithm'])
 
         finished_order = trading_record.place_order(action, record)
-        self.trading_record_registry['extrema-finding'] = result.with_default(
-            self.trading_record_registry['extrema-finding'],
+        self.trading_record_registry['mac-algorithm'] = result.with_default(
+            self.trading_record_registry['mac-algorithm'],
             finished_order)
 
-        trading_record.statistics(self.trading_record_registry['extrema-finding'])
-        extrema_finding_model.statistics(self.trading_model_registry['extrema-finding'])
+        trading_record.statistics(self.trading_record_registry['mac-algorithm'])
+        mac_algorithm_model.statistics(self.trading_model_registry['mac-algorithm'])
 
     def random_trade(self, price_info: PriceInfo) -> None:
         record = trading_record.update_exchange_rate(
@@ -172,7 +172,7 @@ class CoinbaseWebsocketClient(cbpro.WebsocketClient):
         self.message_count += 1
         maybe.map_all(
             [self.algorithmic_trade, self.random_trade, self.q_learning_trade,
-                self.extrema_finding_trade],
+                self.mac_algorithm_trade],
             parse_message(message)
         )
 

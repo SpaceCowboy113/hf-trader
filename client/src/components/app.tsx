@@ -64,7 +64,7 @@ class App extends PureComponent<AppProps> {
                 />
                 <Statistics
                     tradingRecordRegistry={this.props.tradingRecordRegistry}
-                    tradingStrategy={'extrema-finding'}
+                    tradingStrategy={'mac-algorithm'}
                 />
             </div>
         );

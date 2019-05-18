@@ -3,13 +3,13 @@ from typing import Dict
 from algorithmic_model import AlgorithmicModel
 from mypy_extensions import TypedDict
 from q_learning_model import QLearningModel
-from extrema_finding_model import ExtremaFindingModel
+from mac_algorithm_model import MacAlgorithmModel
 from trading_record import TradingRecord
 
 TradingModelRegistry = TypedDict('TradingModelRegistry', {
     'q-learning': QLearningModel,
     'algorithmic': AlgorithmicModel,
-    'extrema-finding': ExtremaFindingModel
+    'mac-algorithm': MacAlgorithmModel
 })
 
 # TODO: convert to typed dictionary

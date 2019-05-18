@@ -6,9 +6,8 @@ from pyrsistent import m
 
 import algorithmic_model
 import moving_average_subroutine
-import filter_subroutine
 import q_learning_model
-import extrema_finding_model
+import mac_algorithm_model
 import trading_record
 import web_application
 from coinbase_websocket_client import CoinbaseWebsocketClient  # noqa: F401
@@ -25,14 +24,16 @@ def close_hf_trader(sig, frame):
 
 trading_record_registry: TradingRecordRegistry = {}
 
-extrema_finding_description = (
+mac_algorithm_description = (
     'Looks for peaks and valleys and makes buy/sell decisions on the \n'
     'upswings and downswings respectively.'
 )
-trading_record_registry['extrema-finding'] = trading_record.construct(
-    'Extrema Finding Trading Record',
-    extrema_finding_description,
-    100000.0
+trading_record_registry['mac-algorithm'] = trading_record.construct(
+    'Moving Average Crossings Trading Record',
+    mac_algorithm_description,
+    100.0,
+    m(little_moving_average=moving_average_subroutine.construct(10),
+        big_moving_average=moving_average_subroutine.construct(30))
 )
 
 q_learning_description = (
@@ -59,10 +60,7 @@ algorithmic_description = (
 trading_record_registry['algorithmic'] = trading_record.construct(
     'Algorithmic Trading Record',
     algorithmic_description,
-    100000.0,
-    m(moving_average_10=moving_average_subroutine.construct(10),
-        moving_average_100=moving_average_subroutine.construct(100),
-        filtered=filter_subroutine.construct())
+    100000.0
 )
 
 random_description = (
@@ -82,8 +80,10 @@ trading_model_registry: TradingModelRegistry = {
         selling_threshold=0.02,
         cut_losses_threshold=-0.05
     ),
-    'extrema-finding': extrema_finding_model.construct(
-        selling_threshold=0.02,
+    'mac-algorithm': mac_algorithm_model.construct(
+        little_n=10,
+        big_n=30,
+        selling_threshold=0.0,
         cut_losses_threshold=-0.05
     )
 }
