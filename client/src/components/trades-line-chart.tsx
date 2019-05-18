@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Maybe } from '../functional/maybe';
 import { Order, TradingRecord, TradingRecordRegistry, Transaction, Subroutine, SubroutineResult } from '../state/trading-state';
+import { start } from 'repl';
 
 
 function getPointBorderColor(order: Order): Maybe<string> {
@@ -65,14 +66,6 @@ interface TradesLineChartProps {
 interface TradesLineChartState {
     labels: string[];
     datasets: any[];
-}
-
-function getTransactions(transactionWindow: Transaction[]): Transaction[] {
-    const xAxisMaxLength = 250;
-    if (transactionWindow.length > xAxisMaxLength) {
-        return transactionWindow.slice(transactionWindow.length - xAxisMaxLength);
-    }
-    return transactionWindow;
 }
 
 export default class TradesLineChart extends Component<TradesLineChartProps, TradesLineChartState> {
@@ -156,33 +149,55 @@ export default class TradesLineChart extends Component<TradesLineChartProps, Tra
         // entire transaction window on push
         const labels: string[] = [];
         const exchangeRates: number[] = [];
+        var label_epochs: number[] = [];
         const pointBorderColors: any[] = [];
         const pointBackgroundColors: any[] = [];
         const pointRadii: any[] = [];
         const pointHitRadii: any[] = [];
         const pointHoverRadii: any[] = [];
 
+        var epoch_min = Infinity;
+        var epoch_max = -Infinity;
         tradingRecord.exchange_rates.samples.forEach((sample, index) => {
-            const exchangeRate = sample.exchange_rate;
-
-            exchangeRates.push(exchangeRate);
+            exchangeRates.push(sample.exchange_rate);
+            const epoch = sample.epoch;
+            labels.push(getLabel(epoch));
+            label_epochs.push(epoch);
         });
         const exchangeRateLine = this.state.datasets[0];
         exchangeRateLine.data = exchangeRates;
 
-        getTransactions(tradingRecord.transaction_window).forEach((transaction, index) => {
-            const pointBorderColor = getPointBorderColor(transaction.order);
-            const pointBackgroundColor = getPointBackgroundColor(transaction.order);
-            const pointRadius = Math.max(transaction.quantity * 5, 5);
-            const pointHitRadius = pointRadius;
-            const pointHoverRadius = pointRadius / 2;
+        var starting_index: number = 0;
+        label_epochs.forEach(function(epoch: number) {
+            var transaction_found: Boolean = false;
+            var i: number = 0;
+            for(i=starting_index;i<tradingRecord.transaction_window.length;i++) {
+                if (tradingRecord.transaction_window[i].epoch == epoch) {
+                    transaction_found = true;
+                    starting_index = i;
+                    break;
+                }
+            }
+
+            var pointBorderColor: Maybe<string>;
+            var pointBackgroundColor: Maybe<string>;
+            var pointRadius: number = 0;
+            var pointHitRadius: number = 0;
+            var pointHoverRadius: number = 0;
+            if (transaction_found) {
+                const transaction = tradingRecord.transaction_window[i];
+                pointBorderColor = getPointBorderColor(transaction.order);
+                pointBackgroundColor = getPointBackgroundColor(transaction.order);
+                pointRadius = Math.max(transaction.quantity * 5, 5);
+                pointHitRadius = pointRadius;
+                pointHoverRadius = pointRadius / 2;
+            }
 
             pointBorderColors.push(pointBorderColor);
             pointBackgroundColors.push(pointBackgroundColor);
             pointRadii.push(pointRadius);
             pointHitRadii.push(pointHitRadius);
             pointHoverRadii.push(pointHoverRadius);
-            labels.push(getLabel(transaction.epoch));
         });
         const pointLine = this.state.datasets[1];
         pointLine.data = exchangeRates;
