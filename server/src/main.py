@@ -32,7 +32,8 @@ extrema_finding_description = (
 trading_record_registry['extrema-finding'] = trading_record.construct(
     'Extrema Finding Trading Record',
     extrema_finding_description,
-    100000.0
+    100000.0,
+    m(filtered=filter_subroutine.construct())
 )
 
 q_learning_description = (

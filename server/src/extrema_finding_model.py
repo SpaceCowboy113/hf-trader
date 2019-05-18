@@ -9,6 +9,7 @@ import trading_record
 from logger import logger
 from pyrsistent import PRecord, field, pvector, pvector_field
 from trading_record import TradingAction, TradingRecord
+from scipy.signal import find_peaks
 
 
 class PendingTrade(PRecord):
@@ -39,6 +40,9 @@ def predict(
     exchange_rate = maybe.with_default(0.0, trading_record.get_exchange_rate(record))
     rate_of_change = maybe.with_default(0.0, trading_record.get_rate_of_change(record))
     moving_average = maybe.with_default(0.0, trading_record.get_moving_average(record))
+
+    filtered_exchange_rates = [x.value for x in record.exchange_rates.subroutines['filtered']]
+    peak_indices, _ = find_peaks(filtered_exchange_rates)
 
     should_sell_partial = partial(
         should_sell,
