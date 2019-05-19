@@ -238,8 +238,8 @@ def get_exchange_rate(record: TradingRecord) -> Maybe[float]:
     return sliding_window.current_exchange_rate(record.exchange_rates)
 
 
-def get_rate_of_change(record: TradingRecord) -> Maybe[float]:
-    return sliding_window.derivative(100, record.exchange_rates.samples)
+def get_rate_of_change(record: TradingRecord, n: int = 100) -> Maybe[float]:
+    return sliding_window.derivative(n, record.exchange_rates.samples)
 
 
 def get_moving_average(record: TradingRecord, n: int = 100) -> Maybe[float]:

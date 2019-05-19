@@ -31,9 +31,7 @@ mac_algorithm_description = (
 trading_record_registry['mac-algorithm'] = trading_record.construct(
     'Moving Average Crossings Trading Record',
     mac_algorithm_description,
-    100.0,
-    m(little_moving_average=moving_average_subroutine.construct(3),
-        big_moving_average=moving_average_subroutine.construct(10))
+    100.0
 )
 
 q_learning_description = (
