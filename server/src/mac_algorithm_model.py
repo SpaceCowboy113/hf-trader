@@ -105,10 +105,9 @@ def quantity_to_buy(
     price_difference_ratio = abs(price_difference / last_acted_price)
     if (price_difference_ratio > buy_threshold and
             rate_of_change >= 0 and
-            not rate_of_change_was_positive):
-        usd_to_spend = 0.33 * usd_available
-        if usd_to_spend >= 5:
-            return 0.33 * usd_available / exchange_rate
+            not rate_of_change_was_positive and
+            usd_available >= 10):
+        return 0.33 * usd_available / exchange_rate
     return 0.0
 
 
