@@ -5,8 +5,9 @@ import tensorflow as tf
 from pyrsistent import m
 
 import algorithmic_model
-import moving_average_subroutine
 import q_learning_model
+import filter_subroutine
+import moving_average_subroutine
 import mac_algorithm_model
 import trading_record
 import web_application
@@ -32,8 +33,8 @@ trading_record_registry['mac-algorithm'] = trading_record.construct(
     'Moving Average Crossings Trading Record',
     mac_algorithm_description,
     100.0,
-    m(little_moving_average=moving_average_subroutine.construct(3),
-        big_moving_average=moving_average_subroutine.construct(10))
+    m(filtered=filter_subroutine.construct(),
+        moving_average=moving_average_subroutine.construct(10))
 )
 
 q_learning_description = (
@@ -81,9 +82,7 @@ trading_model_registry: TradingModelRegistry = {
         cut_losses_threshold=-0.05
     ),
     'mac-algorithm': mac_algorithm_model.construct(
-        little_n=3,
-        big_n=10,
-        selling_threshold=0.0,
+        selling_threshold=0.02,
         cut_losses_threshold=-0.05
     )
 }
