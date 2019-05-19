@@ -6,7 +6,6 @@ from pyrsistent import m
 
 import algorithmic_model
 import q_learning_model
-import filter_subroutine
 import moving_average_subroutine
 import mac_algorithm_model
 import trading_record
@@ -33,8 +32,8 @@ trading_record_registry['mac-algorithm'] = trading_record.construct(
     'Moving Average Crossings Trading Record',
     mac_algorithm_description,
     100.0,
-    m(filtered=filter_subroutine.construct(),
-        moving_average=moving_average_subroutine.construct(10))
+    m(little_moving_average=moving_average_subroutine.construct(3),
+        big_moving_average=moving_average_subroutine.construct(10))
 )
 
 q_learning_description = (
