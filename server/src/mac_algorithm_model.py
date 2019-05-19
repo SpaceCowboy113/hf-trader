@@ -28,7 +28,7 @@ class MacAlgorithmModel(PRecord):
 def construct(
     selling_threshold: float = 0.02,
     cut_losses_threshold: float = -0.05,
-    buy_threshold: float = 0.01
+    buy_threshold: float = 0.005
 ) -> MacAlgorithmModel:
     return MacAlgorithmModel(
         pending_trades=[],
