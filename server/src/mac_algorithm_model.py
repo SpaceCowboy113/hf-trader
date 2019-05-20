@@ -69,13 +69,11 @@ def predict(
         else:
             remaining_pending_trades.append(trade)
 
-    last_acted_price = 0.0
+    last_acted_price = 0.001
     for transaction in reversed(record.transaction_window):
         if transaction.quantity > 0:
             last_acted_price = transaction.exchange_rate
             break
-    if last_acted_price == 0.0:
-        last_acted_price = record.exchange_rates.samples[0].exchange_rate
     crypto_to_buy = quantity_to_buy(
             rate_of_change, model.rate_of_change_was_positive, record.usd, exchange_rate,
             last_acted_price, model.buy_threshold)
