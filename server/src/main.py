@@ -79,8 +79,9 @@ trading_model_registry: TradingModelRegistry = {
         cut_losses_threshold=-0.05
     ),
     'mac-algorithm': mac_algorithm_model.construct(
-        selling_threshold=0.02,
-        cut_losses_threshold=-0.05
+        selling_threshold=0.0025,
+        cut_losses_threshold=-0.05,
+        buy_threshold=0.01
     )
 }
 
