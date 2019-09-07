@@ -63,6 +63,7 @@ class CoinbaseWebsocketClient(cbpro.WebsocketClient):
         self.trading_model_registry = trading_model_registry
 
     def on_open(self):
+        self.channels = ['ticker', 'user', 'matches', 'level2', 'full']
         self.url = "wss://ws-feed.pro.coinbase.com/"
         self.products = ["BTC-USD"]
         self.message_count = 0
