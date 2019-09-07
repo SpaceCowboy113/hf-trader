@@ -5,7 +5,7 @@ import transaction
 from invariants import cannot_be_negative
 from logger import logger
 from maybe import Maybe
-from pyrsistent import PRecord, field, pvector_field, PMap, m
+from pyrsistent import PRecord, field, pvector_field
 from result import Error, Result, Warning
 from transaction import Transaction
 
@@ -29,11 +29,7 @@ class TradingRecord(PRecord):
     transaction_window = pvector_field(Transaction)
 
 
-def construct(
-        name: str,
-        description: str = '',
-        initial_usd: float = 0,
-        subroutines: PMap = m()) -> TradingRecord:
+def construct(name: str, description: str = '', initial_usd: float = 0) -> TradingRecord:
     return TradingRecord(
         name=name,
         description=description,
@@ -44,7 +40,7 @@ def construct(
         sells=0,
         holds=0,
         fees_paid=0.0,
-        exchange_rates=sliding_window.construct(maximum_size=1000, subroutines=subroutines),
+        exchange_rates=sliding_window.construct(maximum_size=1000),
         transaction_window=[]
     )
 
@@ -211,10 +207,8 @@ def statistics(record: TradingRecord):
     logger.log(f'-- {record.name} Statistics --')
     exchange_rate = sliding_window.current_exchange_rate(record.exchange_rates)
     logger.log(f'Exchange Rate: {exchange_rate}')
-    for name, subroutine in record.exchange_rates.subroutines.items():
-        if len(subroutine.results) < 1:
-            continue
-        logger.log(f'{name}: {subroutine.results[-1].data["value"]}')
+    exchange_rate_filtered = sliding_window.current_exchange_rate_filtered(record.exchange_rates)
+    logger.log(f'Filtered Exchange Rate: {exchange_rate_filtered}')
     logger.log(f'USD: {record.usd}')
     logger.log(f'Cryptocurrency: {record.crypto}')
     logger.log(f'Buys: {record.buys}')
@@ -222,9 +216,9 @@ def statistics(record: TradingRecord):
     logger.log(f'Holds: {record.holds}')
     logger.log(f'Pending Sales: {len(record.pending_sales)}')
     logger.log(f'Fees Paid: {record.fees_paid}')
-    moving_average = sliding_window.average(100, record.exchange_rates.samples)
+    moving_average = sliding_window.average(100, record.exchange_rates)
     logger.log(f'Moving Average: {moving_average}')
-    derivative = sliding_window.derivative(100, record.exchange_rates.samples)
+    derivative = sliding_window.derivative(100, record.exchange_rates)
     logger.log(f'Rate of Change: {derivative}')
     exchange_rate = get_exchange_rate(record)
     if exchange_rate is not None:
@@ -239,8 +233,8 @@ def get_exchange_rate(record: TradingRecord) -> Maybe[float]:
 
 
 def get_rate_of_change(record: TradingRecord) -> Maybe[float]:
-    return sliding_window.derivative(100, record.exchange_rates.samples)
+    return sliding_window.derivative(100, record.exchange_rates)
 
 
 def get_moving_average(record: TradingRecord) -> Maybe[float]:
-    return sliding_window.average(100, record.exchange_rates.samples)
+    return sliding_window.average(100, record.exchange_rates)
