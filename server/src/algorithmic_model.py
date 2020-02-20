@@ -2,7 +2,7 @@
 A model that predicts trading decisions using handbuilt algorithms
 """
 from functools import partial
-from typing import Tuple
+from typing import Tuple, Dict, Union
 
 import maybe
 import trading_record
@@ -23,14 +23,16 @@ class AlgorithmicModel(PRecord):
     cut_losses_threshold = field(type=float)
 
 
-def construct(
-    selling_threshold: float,
-    cut_losses_threshold: float,
-) -> AlgorithmicModel:
+# class Constants(PRecord):
+#     selling_threshold = field(type=float)
+#     cut_losses_threshold = field(type=float)
+
+# TODO: reuse type interface in genetic.py
+def construct(constants: Dict[str, Union[float, int]]) -> AlgorithmicModel:
     return AlgorithmicModel(
         pending_trades=[],
-        selling_threshold=selling_threshold,
-        cut_losses_threshold=cut_losses_threshold
+        selling_threshold=constants.selling_threshold,
+        cut_losses_threshold=constants.cut_losses_threshold,
     )
 
 

@@ -8,8 +8,9 @@ from coinbase_websocket_client import (CoinbaseWebsocketClient,  # noqa: F401
                                        TradingRecordRegistry)
 from logger import logger
 import signal
-import sys
-
+import sys 
+from genetic import GeneticModel
+import genetic
 
 def close_hf_trader(sig, frame):
     logger.info('closing high-frequency trader')
@@ -67,6 +68,24 @@ trading_model_registry: TradingModelRegistry = {
 
 coinbase_websocket_client = CoinbaseWebsocketClient(trading_record_registry, trading_model_registry)
 
+trainable_properties = {
+    'selling_threshold': 0.02,
+    'cut_losses_threshold': -0.05,
+}
+genetic_model = GeneticModel(
+    construct_trading_model=algorithmic_model.construct,
+    trade=algorithmic_model.trade,
+    trainable_properties=trainable_properties,
+    generation_size=10,
+)
+registries = (trading_record_registry, trading_model_registry)
+
+genetic.start(
+    coinbase_websocket_client,
+    registries,
+    genetic_model,
+)
+
 if hasattr(signal, 'SIGINT'):
     logger.log('listening for ctrl-c on signal.SIGINT')
     signal.signal(signal.SIGINT, close_hf_trader)
@@ -77,7 +96,7 @@ else:
     logger.error('unable to set up ctrl-c listeners')
 
 
-coinbase_websocket_client.start()
+# coinbase_websocket_client.start()
 
 logger.log(f'{coinbase_websocket_client.url} {coinbase_websocket_client.products}')
 
