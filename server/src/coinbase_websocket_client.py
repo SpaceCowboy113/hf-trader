@@ -39,6 +39,7 @@ PriceInfo = Tuple[float, float]
 
 
 def parse_message(msg: CoinbaseMessage) -> Maybe[PriceInfo]:
+    print('parse_message: ', msg)
     has_price_changed = (
         'price' in msg and
         'time' in msg and

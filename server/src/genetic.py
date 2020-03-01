@@ -8,19 +8,22 @@ from trading_record import TradingRecord
 from pyrsistent import PRecord, field, pvector, pvector_field
 import maybe
 import random
-
-TradingModel = TypeVar('Model')
+from logger import logger
+import types
+# TradingModel = TypeVar('Model')
+TradingModel = Any
 Number = Union[float, int]
-TrainableProperties = Dict[str, Number]
+TrainableProperties = Dict[str, Any]
 Organism = Tuple[TrainableProperties, TradingRecord, Any]
 Population = Dict[str, Organism]
 
 
 class GeneticModel(PRecord):
-    construct_trading_model: field(type=Any, mandatory=True)
-    # construct_trading_model: field(type=Callable[TrainableProperties, TradingModel], mandatory=True)
-    trade: field(type=Callable[[TradingRecord, TradingModel, PriceInfo], None], mandatory=True)
-    trainable_properties: field(type=TrainableProperties, mandatory=True)
+    # construct_trading_model = field(type=Number, mandatory=True)
+    # construct_trading_model = field(
+    construct_trading_model = field(type=types.FunctionType, mandatory=True)
+    trade = field(type=types.FunctionType, mandatory=True)
+    trainable_properties = field(type=dict, mandatory=True)
     generation_size = field(type=int, mandatory=True)
 
 # def construct() -> GeneticModel:
@@ -32,7 +35,6 @@ class GeneticModel(PRecord):
 
 
 def start(
-    coinbase_websocket_client: CoinbaseWebsocketClient,
     registries: Tuple[TradingRecordRegistry, TradingModelRegistry],
     genetic_model: GeneticModel,
 ) -> None:
@@ -43,41 +45,45 @@ def start(
     # TODO: Create dict containing label -> trainable constants, record, model
 
     # initialize population
+    print('1')
     population = {}
     for i in range(0, genetic_model.generation_size):
         label = f'genetic-INITIAL-{i}'
 
         # TODO: Assign constants from previous generation
-        constants = genetic_model.trainable_properties
-        # trainables_map[label] = constants
-        model = genetic_model.construct_trading_model(constants)
+        trainables = genetic_model.trainable_properties
+        # trainables_map[label] = trainables
+        model = genetic_model.construct_trading_model(trainables)
         record = trading_record.construct(
             label,
             '(insert genetic algorithm description)',
             100000.0
         )
-        population[label] = (constants, record, model)
+        population[label] = (trainables, record, model)
         trading_record_registry[label] = record
         trading_model_registry[label] = model
-
+    print('2')
     for generation in range(0, 10):
-
+        print('executing', generation)
         # --execution
-        execute_trades = []
+        execute_trades: list = []
         for label, organism in population.items():
             constants, record, model = organism
+            # Creates new function, trading_model.trade(price_info)
             partial_trade = partial(
                 genetic_model.trade,
                 record,
                 model
             )
-            execute_trades.push(partial_trade)
+            execute_trades.append(partial_trade)
 
         coinbase_websocket_client = CoinbaseWebsocketClient(execute_trades)
+        logger.log(f'{coinbase_websocket_client.url} {coinbase_websocket_client.products}')
         coinbase_websocket_client.start()
 
         # sleep for five minutes
-        time.sleep(60 * 5)
+        # time.sleep(60 * 5)
+        time.sleep(1)
         coinbase_websocket_client.close()
         # --execution finished
 
@@ -86,16 +92,17 @@ def start(
             genetic_model,
         )
         # Reassign label down here
-        children = crossover(fittest, genetic_model)
+        children: Population = crossover(fittest, genetic_model)
 
         population = mutate(children)
 
 
 def select_fittest(
-    population: Population,
-    genetic_model: GeneticModel,
+    population: Any,
+    genetic_model: Any,
 ) -> Population:
-    selected = {}
+    print('select fittest')
+    selected: dict = {}
     generation_filter_size = genetic_model.generation_size / 2
     min_profit = None
     min_profit_label = None
@@ -123,7 +130,7 @@ def select_fittest(
                 # Remove old minimum record and select new min_profit_record
                 selected.pop(min_profit_label, None)
                 min_profit_label = min(
-                    selected.iterkeys(),
+                    selected.keys(),
                     key=(lambda label: trading_record.calculate_profit(selected[label]))
                 )
                 min_profit = trading_record.calculate_profit(selected[min_profit_label])
@@ -138,6 +145,7 @@ def crossover(
     population: Population,
     genetic_model: GeneticModel,
 ) -> Population:
+    print('crossover')
     next_generation = {}
     for label, organism in population.items():
         trainable_properties, _, _ = organism
@@ -196,6 +204,6 @@ def generate_trainable_properties(
 
 
 def mutate(
-    population: Population,
-) -> Population:
+    population: Any,
+) -> Any:
     return population

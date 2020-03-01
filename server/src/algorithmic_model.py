@@ -31,8 +31,8 @@ class AlgorithmicModel(PRecord):
 def construct(constants: Dict[str, Union[float, int]]) -> AlgorithmicModel:
     return AlgorithmicModel(
         pending_trades=[],
-        selling_threshold=constants.selling_threshold,
-        cut_losses_threshold=constants.cut_losses_threshold,
+        selling_threshold=constants['selling_threshold'],
+        cut_losses_threshold=constants['cut_losses_threshold'],
     )
 
 
