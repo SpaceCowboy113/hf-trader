@@ -68,14 +68,14 @@ trading_model_registry: TradingModelRegistry = {
 
 # coinbase_websocket_client = CoinbaseWebsocketClient(trading_record_registry, trading_model_registry)
 
-trainable_properties = {
+genome = {
     'selling_threshold': 0.02,
     'cut_losses_threshold': -0.05,
 }
 genetic_model = GeneticModel(
     construct_trading_model=algorithmic_model.construct,
     trade=algorithmic_model.trade,
-    trainable_properties=trainable_properties,
+    genome=genome,
     generation_size=10,
 )
 registries = (trading_record_registry, trading_model_registry)
