@@ -232,6 +232,7 @@ def calculate_net_worth(record: TradingRecord) -> float:
 
 
 def calculate_profit(record: TradingRecord) -> float:
+    # logger.log(f'Calculating profit with record: {(record)}')
     net_worth = calculate_net_worth(record)
     return net_worth - record.initial_usd
 

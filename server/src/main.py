@@ -12,10 +12,10 @@ from genetic import GeneticModel
 import genetic
 
 
-# def close_hf_trader(sig, frame):
-#     logger.info('closing high-frequency trader')
-#     coinbase_websocket_client.close()
-#     sys.exit(0)
+def close_hf_trader(sig, frame):
+    logger.info('closing high-frequency trader')
+    # coinbase_websocket_client.close()
+    sys.exit(0)
 
 
 trading_record_registry: TradingRecordRegistry = {}
@@ -69,8 +69,8 @@ trading_model_registry: TradingModelRegistry = {
 # coinbase_websocket_client = CoinbaseWebsocketClient(trading_record_registry, trading_model_registry)
 
 genome = {
-    'selling_threshold': 0.02,
-    'cut_losses_threshold': -0.05,
+    'selling_threshold': 0.005,
+    'cut_losses_threshold': -0.02,
 }
 genetic_model = GeneticModel(
     construct_trading_model=algorithmic_model.construct,
@@ -87,10 +87,10 @@ genetic.start(
 
 if hasattr(signal, 'SIGINT'):
     logger.log('listening for ctrl-c on signal.SIGINT')
-    # signal.signal(signal.SIGINT, close_hf_trader)
+    signal.signal(signal.SIGINT, close_hf_trader)
 elif hasattr(signal, 'SIGBREAK'):
     logger.warn('listening for ctrl-c on signal.SIGBREAK')
-    # signal.signal(signal.SIGBREAK, close_hf_trader)
+    signal.signal(signal.SIGBREAK, close_hf_trader)
 else:
     logger.error('unable to set up ctrl-c listeners')
 

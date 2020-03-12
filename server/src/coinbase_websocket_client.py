@@ -47,7 +47,6 @@ def parse_message(msg: CoinbaseMessage) -> Maybe[PriceInfo]:
     if has_price_changed:
         exchange_rate = float(msg['price'])
         epoch = zulu_time.get_epoch(msg['time'])
-
         return exchange_rate, epoch
     return None
 

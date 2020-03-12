@@ -10,6 +10,7 @@ from logger import logger
 from pyrsistent import PRecord, field, pvector, pvector_field
 from trading_record import TradingAction, TradingRecord
 from coinbase_websocket_client import PriceInfo
+from result import Result
 import result
 
 
@@ -21,11 +22,6 @@ class AlgorithmicModel(PRecord):
     pending_trades = pvector_field(PendingTrade)
     selling_threshold = field(type=float)
     cut_losses_threshold = field(type=float)
-
-
-# class Constants(PRecord):
-#     selling_threshold = field(type=float)
-#     cut_losses_threshold = field(type=float)
 
 # TODO: reuse type interface in genetic.py
 def construct(constants: Dict[str, Union[float, int]]) -> AlgorithmicModel:
@@ -100,7 +96,7 @@ def statistics(model: AlgorithmicModel) -> None:
     logger.log(f'Pending Trades: {len(model.pending_trades)}')
 
 
-def trade(record: TradingRecord, model: AlgorithmicModel, price_info: PriceInfo) -> None:
+def trade(record: TradingRecord, model: AlgorithmicModel, price_info: PriceInfo) -> Result[TradingRecord]:
     record = trading_record.update_exchange_rate(
         price_info,
         record
@@ -116,5 +112,7 @@ def trade(record: TradingRecord, model: AlgorithmicModel, price_info: PriceInfo)
         finished_order
     )
 
-    trading_record.statistics(record)
-    statistics(model)
+    # trading_record.statistics(record)
+    # statistics(model)
+
+    return finished_order

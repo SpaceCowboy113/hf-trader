@@ -81,6 +81,7 @@ export function calculateProfit(tradingRecord: TradingRecord): number {
 export interface Statistics {
     'algorithmic': TradingRecord;
     'q-learning': TradingRecord;
+    'genetic-G0-0': TradingRecord;
 }
 
 export type TradingStrategy = keyof Statistics;
@@ -105,6 +106,7 @@ export function longPollTradingInfo(
             }
             const algorithmicTradingRecord = result['algorithmic'];
             const qLearningTradingRecord = result['q-learning'];
+            const geneticTradingRecord = result['genetic-G0-0'];
             tradingRecordRegistry.set(
                 'algorithmic',
                 algorithmicTradingRecord,
@@ -113,10 +115,15 @@ export function longPollTradingInfo(
                 'q-learning',
                 qLearningTradingRecord,
             );
+            tradingRecordRegistry.set(
+                'genetic-G0-0',
+                geneticTradingRecord,
+            );
 
             // TODO: pull trading models from server and set here
             tradingModelRegistry.set('algorithmic', {});
             tradingModelRegistry.set('q-learning', {});
+            tradingModelRegistry.set('genetic-G0-0', {});
         }).then(() => longPollTradingInfo(
             tradingRecordRegistry,
             tradingModelRegistry,
