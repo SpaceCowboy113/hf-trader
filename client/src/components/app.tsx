@@ -56,13 +56,8 @@ class App extends PureComponent<AppProps> {
                 </header>
                 <Statistics
                     tradingRecordRegistry={this.props.tradingRecordRegistry}
-                    tradingStrategy={'algorithmic'}
+                    tradingStrategy={'genetic-G0-0'}
                 />
-                <Statistics
-                    tradingRecordRegistry={this.props.tradingRecordRegistry}
-                    tradingStrategy={'q-learning'}
-                />
-
             </div>
         );
     }

@@ -44,9 +44,11 @@ class Statistics(Resource):
         logger.log('/stats/GET')
         algorithmic_record = self.trading_record_registry['algorithmic']
         q_learning_record = self.trading_record_registry['q-learning']
+        genetic_record = self.trading_record_registry['genetic-G0-0']
         return json.dumps({
             'algorithmic': algorithmic_record.serialize(),
             'q-learning': q_learning_record.serialize(),
+            'genetic-G0-0': genetic_record.serialize(),
         })
 
 
@@ -67,9 +69,11 @@ class Transactions(Resource):
         logger.log('/transactions/GET')
         algorithmic_record = self.trading_record_registry['algorithmic']
         q_learning_record = self.trading_record_registry['q-learning']
+        genetic_record = self.trading_record_registry['genetic-G0-0']
         return json.dumps({
             'algorithmic': algorithmic_record.transaction_window.serialize(),
             'q-learning': q_learning_record.transaction_window.serialize(),
+            'genetic-G0-0': genetic_record.serialize(),
         })
 
 

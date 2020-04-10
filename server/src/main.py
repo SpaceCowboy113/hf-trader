@@ -3,17 +3,18 @@ import q_learning_model
 import tensorflow as tf
 import trading_record
 import web_application
-from coinbase_websocket_client import (CoinbaseWebsocketClient,  # noqa: F401
-                                       TradingModelRegistry,
-                                       TradingRecordRegistry)
+from coinbase_websocket_client import (CoinbaseWebsocketClient)  # noqa: F401
+from registries import TradingModelRegistry, TradingRecordRegistry
 from logger import logger
 import signal
-import sys
+import sys 
+from genetic import GeneticModel
+import genetic
 
 
 def close_hf_trader(sig, frame):
     logger.info('closing high-frequency trader')
-    coinbase_websocket_client.close()
+    # coinbase_websocket_client.close()
     sys.exit(0)
 
 
@@ -59,13 +60,30 @@ trading_record_registry['random'] = trading_record.construct(
 session = tf.Session()
 trading_model_registry: TradingModelRegistry = {
     'q-learning': q_learning_model.construct(session),
-    'algorithmic': algorithmic_model.construct(
-        selling_threshold=0.02,
-        cut_losses_threshold=-0.05
-    )
+    'algorithmic': algorithmic_model.construct({
+        'selling_threshold': 0.02,
+        'cut_losses_threshold': -0.05
+    })
 }
 
-coinbase_websocket_client = CoinbaseWebsocketClient(trading_record_registry, trading_model_registry)
+# coinbase_websocket_client = CoinbaseWebsocketClient(trading_record_registry, trading_model_registry)
+
+genome = {
+    'selling_threshold': 0.005,
+    'cut_losses_threshold': -0.02,
+}
+genetic_model = GeneticModel(
+    construct_trading_model=algorithmic_model.construct,
+    trade=algorithmic_model.trade,
+    genome=genome,
+    generation_size=10,
+)
+registries = (trading_record_registry, trading_model_registry)
+
+genetic.start(
+    registries,
+    genetic_model,
+)
 
 if hasattr(signal, 'SIGINT'):
     logger.log('listening for ctrl-c on signal.SIGINT')
@@ -77,8 +95,8 @@ else:
     logger.error('unable to set up ctrl-c listeners')
 
 
-coinbase_websocket_client.start()
+# coinbase_websocket_client.start()
 
-logger.log(f'{coinbase_websocket_client.url} {coinbase_websocket_client.products}')
+# logger.log(f'{coinbase_websocket_client.url} {coinbase_websocket_client.products}')
 
 web_application.start(trading_record_registry, trading_model_registry)

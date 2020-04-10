@@ -2,13 +2,16 @@
 A model that predicts trading decisions using handbuilt algorithms
 """
 from functools import partial
-from typing import Tuple
+from typing import Tuple, Dict, Union
 
 import maybe
 import trading_record
 from logger import logger
 from pyrsistent import PRecord, field, pvector, pvector_field
 from trading_record import TradingAction, TradingRecord
+from coinbase_websocket_client import PriceInfo
+from result import Result
+import result
 
 
 class PendingTrade(PRecord):
@@ -20,15 +23,12 @@ class AlgorithmicModel(PRecord):
     selling_threshold = field(type=float)
     cut_losses_threshold = field(type=float)
 
-
-def construct(
-    selling_threshold: float = 0.02,
-    cut_losses_threshold: float = -0.05
-) -> AlgorithmicModel:
+# TODO: reuse type interface in genetic.py
+def construct(constants: Dict[str, Union[float, int]]) -> AlgorithmicModel:
     return AlgorithmicModel(
         pending_trades=[],
-        selling_threshold=selling_threshold,
-        cut_losses_threshold=cut_losses_threshold
+        selling_threshold=constants['selling_threshold'],
+        cut_losses_threshold=constants['cut_losses_threshold'],
     )
 
 
@@ -69,7 +69,7 @@ def predict(
 
 
 def should_buy(exchange_rate: float, rate_of_change: float,
-        moving_average: float, usd_available: float) -> bool:
+               moving_average: float, usd_available: float) -> bool:
     if (rate_of_change < 0 and moving_average > exchange_rate and
             usd_available > exchange_rate):
         return True
@@ -94,3 +94,25 @@ def should_sell(
 
 def statistics(model: AlgorithmicModel) -> None:
     logger.log(f'Pending Trades: {len(model.pending_trades)}')
+
+
+def trade(record: TradingRecord, model: AlgorithmicModel, price_info: PriceInfo) -> Result[TradingRecord]:
+    record = trading_record.update_exchange_rate(
+        price_info,
+        record
+    )
+    action, model = predict(
+        record,
+        model
+    )
+
+    finished_order = trading_record.place_order(action, record)
+    record = result.with_default(
+        record,
+        finished_order
+    )
+
+    # trading_record.statistics(record)
+    # statistics(model)
+
+    return finished_order

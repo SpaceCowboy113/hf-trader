@@ -1,7 +1,7 @@
 import random
-from typing import Tuple
+from typing import Tuple, List, Callable
 
-import algorithmic_model
+# import algorithmic_model
 import cbpro
 import maybe
 import q_learning_model
@@ -12,7 +12,7 @@ from logger import logger
 from maybe import Maybe
 from pyrsistent import PRecord, field
 from q_records import QModelInput
-from registries import TradingModelRegistry, TradingRecordRegistry
+# from registries import TradingModelRegistry, TradingRecordRegistry
 from trading_record import TradingAction
 
 
@@ -47,20 +47,20 @@ def parse_message(msg: CoinbaseMessage) -> Maybe[PriceInfo]:
     if has_price_changed:
         exchange_rate = float(msg['price'])
         epoch = zulu_time.get_epoch(msg['time'])
-
         return exchange_rate, epoch
     return None
 
+# ExecuteTrade: interface for function where given new PricingInfo
+# a trading decision is made and executed
+
+
+ExecuteTrade = Callable[[PriceInfo], None]
+
 
 class CoinbaseWebsocketClient(cbpro.WebsocketClient):
-    def __init__(
-            self,
-            trading_record_registry: TradingRecordRegistry,
-            trading_model_registry: TradingModelRegistry
-    ):
+    def __init__(self, execute_trades: List[ExecuteTrade]):
         super().__init__()
-        self.trading_record_registry = trading_record_registry
-        self.trading_model_registry = trading_model_registry
+        self.execute_trades = execute_trades
 
     def on_open(self):
         self.channels = ['ticker', 'user', 'matches', 'level2', 'full']
@@ -118,24 +118,24 @@ class CoinbaseWebsocketClient(cbpro.WebsocketClient):
         trading_record.statistics(self.trading_record_registry['q-learning'])
         self.time_delta += 1
 
-    def algorithmic_trade(self, price_info: PriceInfo) -> None:
-        record = trading_record.update_exchange_rate(
-            price_info,
-            self.trading_record_registry['algorithmic']
-        )
-        action, self.trading_model_registry['algorithmic'] = algorithmic_model.predict(
-            record,
-            self.trading_model_registry['algorithmic']
-        )
+    # def algorithmic_trade(self, price_info: PriceInfo) -> None:
+    #     record = trading_record.update_exchange_rate(
+    #         price_info,
+    #         self.trading_record_registry['algorithmic']
+    #     )
+    #     action, self.trading_model_registry['algorithmic'] = algorithmic_model.predict(
+    #         record,
+    #         self.trading_model_registry['algorithmic']
+    #     )
 
-        finished_order = trading_record.place_order(action, record)
-        self.trading_record_registry['algorithmic'] = result.with_default(
-            self.trading_record_registry['algorithmic'],
-            finished_order
-        )
+    #     finished_order = trading_record.place_order(action, record)
+    #     self.trading_record_registry['algorithmic'] = result.with_default(
+    #         self.trading_record_registry['algorithmic'],
+    #         finished_order
+    #     )
 
-        trading_record.statistics(self.trading_record_registry['algorithmic'])
-        algorithmic_model.statistics(self.trading_model_registry['algorithmic'])
+    #     trading_record.statistics(self.trading_record_registry['algorithmic'])
+    #     algorithmic_model.statistics(self.trading_model_registry['algorithmic'])
 
     def random_trade(self, price_info: PriceInfo) -> None:
         record = trading_record.update_exchange_rate(
@@ -155,7 +155,7 @@ class CoinbaseWebsocketClient(cbpro.WebsocketClient):
     def on_message(self, message: CoinbaseMessage):
         self.message_count += 1
         maybe.map_all(
-            [self.algorithmic_trade, self.random_trade, self.q_learning_trade],
+            self.execute_trades,
             parse_message(message)
         )
 
